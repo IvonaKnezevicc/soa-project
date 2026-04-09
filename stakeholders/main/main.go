@@ -44,10 +44,11 @@ func main() {
 	loginService := service.NewUserLoginService(userRepository, jwtService)
 	userController := controller.NewUserController(registrationService, loginService)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
+	corsMiddleware := middleware.NewCORSMiddleware(cfg.CORSAllowedOrigins)
 
 	httpServer := &http.Server{
 		Addr:              ":" + cfg.ServerPort,
-		Handler:           server.NewRouter(userController, authMiddleware),
+		Handler:           server.NewRouter(userController, authMiddleware, corsMiddleware),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

@@ -10,6 +10,7 @@ import (
 func NewRouter(
 	userController *controller.UserController,
 	authMiddleware *middleware.AuthMiddleware,
+	corsMiddleware *middleware.CORSMiddleware,
 ) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", userController.Health)
@@ -18,5 +19,5 @@ func NewRouter(
 	mux.HandleFunc("/api/stakeholders/users/me", authMiddleware.RequireAuth(userController.GetAuthenticatedUser))
 	mux.HandleFunc("/api/stakeholders/users/logout", authMiddleware.RequireAuth(userController.LogoutUser))
 
-	return mux
+	return corsMiddleware.Handler(mux)
 }

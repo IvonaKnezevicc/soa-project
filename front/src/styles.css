@@ -1,0 +1,60 @@
+/* You can add global styles to this file, and also import other style files */
+
+.auth-card {
+  max-width: 520px;
+  margin: 3rem auto;
+  padding: 2rem;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #dbe4ff;
+  box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
+}
+
+.auth-title {
+  margin: 0 0 1.5rem;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.auth-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: #334155;
+}
+
+.auth-form input,
+.auth-form select {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  font-size: 1rem;
+}
+
+.auth-form button {
+  border: 0;
+  border-radius: 12px;
+  padding: 0.95rem 1rem;
+  background: linear-gradient(135deg, #2563eb 0%, #0f172a 100%);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.message {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.message.success {
+  color: #15803d;
+}
+
+.message.error {
+  color: #b91c1c;
+}

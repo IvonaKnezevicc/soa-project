@@ -1,0 +1,40 @@
+.hero {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hero-copy h1 {
+  margin: 0.4rem 0;
+  font-size: clamp(2rem, 6vw, 3.8rem);
+  line-height: 1;
+}
+
+.hero-copy p {
+  max-width: 640px;
+  font-size: 1.05rem;
+  color: #475569;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 0.4rem;
+  color: #2563eb;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.status-card {
+  padding: 1.5rem;
+  border-radius: 22px;
+  background: white;
+  border: 1px solid #dbe4ff;
+  box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
+}
+
+.status-card h2 {
+  margin-top: 0;
+}

@@ -15,6 +15,7 @@ type Config struct {
 	Neo4jUsername        string
 	Neo4jPassword        string
 	Neo4jDatabase        string
+	CORSAllowedOrigins   []string
 	JWTSecret            string
 	JWTIssuer            string
 	JWTExpirationMinutes int
@@ -29,6 +30,7 @@ func Load() (*Config, error) {
 		Neo4jUsername:        getEnv("NEO4J_USERNAME", ""),
 		Neo4jPassword:        getEnv("NEO4J_PASSWORD", ""),
 		Neo4jDatabase:        getEnv("NEO4J_DATABASE", "neo4j"),
+		CORSAllowedOrigins:   getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:4200"}),
 		JWTSecret:            getEnv("JWT_SECRET", ""),
 		JWTIssuer:            getEnv("JWT_ISSUER", "stakeholders-service"),
 		JWTExpirationMinutes: getEnvAsInt("JWT_EXPIRATION_MINUTES", 60),
@@ -96,4 +98,26 @@ func getEnvAsInt(key string, fallback int) int {
 	}
 
 	return parsedValue
+}
+
+func getEnvAsSlice(key string, fallback []string) []string {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+
+	if len(result) == 0 {
+		return fallback
+	}
+
+	return result
 }
