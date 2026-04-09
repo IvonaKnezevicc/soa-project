@@ -22,54 +22,45 @@ type adminSeedService struct {
 	userRepository repository.UserRepository
 }
 
-type adminSeed struct {
-	username string
-	email    string
-	password string
-}
-
 func NewAdminSeedService(userRepository repository.UserRepository) AdminSeedService {
 	return &adminSeedService{userRepository: userRepository}
 }
 
 func (s *adminSeedService) SeedAdmins(ctx context.Context) error {
-	admins := []adminSeed{
-		{username: "admin1", email: "admin1@example.com", password: "Admin1234"},
-		{username: "admin2", email: "admin2@example.com", password: "Admin1234"},
-		{username: "admin3", email: "admin3@example.com", password: "Admin1234"},
+	const (
+		adminUsername = "admin"
+		adminEmail    = "admin@example.com"
+		adminPassword = "admin"
+	)
+
+	existingUser, err := s.userRepository.FindByUsernameOrEmail(ctx, adminUsername, adminEmail)
+	if err != nil {
+		return err
+	}
+	if existingUser != nil {
+		return nil
 	}
 
-	for _, admin := range admins {
-		existingUser, err := s.userRepository.FindByUsernameOrEmail(ctx, admin.username, admin.email)
-		if err != nil {
-			return err
-		}
-		if existingUser != nil {
-			continue
-		}
-
-		passwordHash, err := bcrypt.GenerateFromPassword([]byte(admin.password), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-
-		user := &domain.User{
-			ID:           generateSeedID(),
-			Username:     admin.username,
-			Email:        strings.ToLower(admin.email),
-			PasswordHash: string(passwordHash),
-			Role:         domain.RoleAdmin,
-			IsBlocked:    false,
-			CreatedAt:    time.Now().UTC(),
-		}
-
-		if err := s.userRepository.Create(ctx, user); err != nil {
-			return err
-		}
-
-		log.Printf("seeded admin user %s", admin.username)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
 	}
 
+	user := &domain.User{
+		ID:           generateSeedID(),
+		Username:     adminUsername,
+		Email:        strings.ToLower(adminEmail),
+		PasswordHash: string(passwordHash),
+		Role:         domain.RoleAdmin,
+		IsBlocked:    false,
+		CreatedAt:    time.Now().UTC(),
+	}
+
+	if err := s.userRepository.Create(ctx, user); err != nil {
+		return err
+	}
+
+	log.Printf("seeded admin user %s", adminUsername)
 	return nil
 }
 

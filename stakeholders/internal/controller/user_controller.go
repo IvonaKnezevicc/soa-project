@@ -99,6 +99,22 @@ func (c *UserController) GetAuthenticatedUser(w http.ResponseWriter, r *http.Req
 	})
 }
 
+func (c *UserController) LogoutUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
+		return
+	}
+
+	if _, ok := auth.IdentityFromContext(r.Context()); !ok {
+		writeJSON(w, http.StatusUnauthorized, dto.ErrorResponse{Message: "authenticated user not found in context"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": "logout successful, remove token on client side",
+	})
+}
+
 func (c *UserController) Health(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
