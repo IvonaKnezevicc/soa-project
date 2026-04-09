@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"soa-project/stakeholders/internal/apperror"
 	"soa-project/stakeholders/internal/auth"
@@ -14,15 +15,18 @@ import (
 type UserController struct {
 	registrationService service.UserRegistrationService
 	loginService        service.UserLoginService
+	userListService     service.UserListService
 }
 
 func NewUserController(
 	registrationService service.UserRegistrationService,
 	loginService service.UserLoginService,
+	userListService service.UserListService,
 ) *UserController {
 	return &UserController{
 		registrationService: registrationService,
 		loginService:        loginService,
+		userListService:     userListService,
 	}
 }
 
@@ -113,6 +117,41 @@ func (c *UserController) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{
 		"message": "logout successful, remove token on client side",
 	})
+}
+
+func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
+		return
+	}
+
+	page := 1
+	status := r.URL.Query().Get("status")
+	if status == "" {
+		status = "all"
+	}
+
+	if pageQuery := r.URL.Query().Get("page"); pageQuery != "" {
+		parsedPage, err := strconv.Atoi(pageQuery)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: "page must be a valid integer"})
+			return
+		}
+		page = parsedPage
+	}
+
+	response, err := c.userListService.GetPagedUsers(r.Context(), page, status)
+	if err != nil {
+		switch {
+		case errors.Is(err, apperror.ErrValidation):
+			writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: err.Error()})
+		default:
+			writeJSON(w, http.StatusInternalServerError, dto.ErrorResponse{Message: "internal server error"})
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, response)
 }
 
 func (c *UserController) Health(w http.ResponseWriter, r *http.Request) {

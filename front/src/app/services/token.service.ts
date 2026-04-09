@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 type JWTPayload = {
   exp?: number;
+  role?: string;
 };
 
 @Injectable({
@@ -34,6 +35,17 @@ export class TokenService {
     }
 
     return true;
+  }
+
+  hasRole(role: string): boolean {
+    const token = this.getToken();
+    if (!token || !this.isTokenValid(token)) {
+      this.clearToken();
+      return false;
+    }
+
+    const payload = this.parsePayload(token);
+    return payload?.role === role;
   }
 
   private isTokenValid(token: string): boolean {

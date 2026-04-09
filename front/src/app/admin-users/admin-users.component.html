@@ -1,0 +1,50 @@
+<section class="users-page">
+  <div class="users-header">
+    <div>
+      <h1>Users</h1>
+    </div>
+    <span class="users-count">Total: {{ totalCount }}</span>
+  </div>
+
+  <div class="users-tabs">
+    <button type="button" [class.active]="selectedStatus === 'all'" (click)="setStatus('all')">All users</button>
+    <button type="button" [class.active]="selectedStatus === 'active'" (click)="setStatus('active')">Active</button>
+    <button type="button" [class.active]="selectedStatus === 'blocked'" (click)="setStatus('blocked')">Blocked</button>
+  </div>
+
+  <p class="users-message" *ngIf="isLoading">Loading users...</p>
+  <p class="users-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <div class="users-table-wrapper" *ngIf="!isLoading && !errorMessage">
+    <table class="users-table" *ngIf="users.length; else emptyState">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Blocked</th>
+          <th>Created at</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td><span class="role-pill">{{ user.role }}</span></td>
+          <td>{{ user.isBlocked ? 'Yes' : 'No' }}</td>
+          <td>{{ user.createdAt | date:'medium' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="empty-state">No users found.</div>
+    </ng-template>
+  </div>
+
+  <div class="pagination" *ngIf="!isLoading && !errorMessage && totalPages > 0">
+    <button type="button" (click)="previousPage()" [disabled]="page <= 1">Previous</button>
+    <span>Page {{ page }} of {{ totalPages }}</span>
+    <button type="button" (click)="nextPage()" [disabled]="page >= totalPages">Next</button>
+  </div>
+</section>

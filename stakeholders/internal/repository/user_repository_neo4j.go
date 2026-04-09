@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -110,6 +111,75 @@ func (r *Neo4jUserRepository) FindByUsername(ctx context.Context, username strin
 	return mapNodeToUser(node)
 }
 
+func (r *Neo4jUserRepository) FindAllPaged(ctx context.Context, page, pageSize int, status string) ([]domain.User, int, error) {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	skip := (page - 1) * pageSize
+	whereClause, params := userStatusFilter(status)
+	params["skip"] = skip
+	params["limit"] = pageSize
+
+	countResult, err := session.Run(ctx, `
+		MATCH (u:User)
+		`+whereClause+`
+		RETURN count(u) AS totalCount
+	`, params)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if !countResult.Next(ctx) {
+		if err := countResult.Err(); err != nil {
+			return nil, 0, err
+		}
+		return []domain.User{}, 0, nil
+	}
+
+	totalCountValue, found := countResult.Record().Get("totalCount")
+	if !found {
+		return nil, 0, errors.New("total count not found in neo4j record")
+	}
+
+	totalCount, err := intValue(totalCountValue)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	result, err := session.Run(ctx, `
+		MATCH (u:User)
+		`+whereClause+`
+		RETURN u
+		ORDER BY u.createdAt DESC, u.username ASC
+		SKIP $skip
+		LIMIT $limit
+	`, params)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	users := make([]domain.User, 0, pageSize)
+	for result.Next(ctx) {
+		node, err := getUserNode(result.Record())
+		if err != nil {
+			return nil, 0, err
+		}
+
+		user, err := mapNodeToUser(node)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		users = append(users, *user)
+	}
+
+	if err := result.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return users, totalCount, nil
+}
+
 func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) error {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
 	defer session.Close(ctx)
@@ -182,4 +252,26 @@ func timeValue(value any) time.Time {
 		return typed
 	}
 	return time.Time{}
+}
+
+func intValue(value any) (int, error) {
+	switch typed := value.(type) {
+	case int64:
+		return int(typed), nil
+	case int:
+		return typed, nil
+	default:
+		return 0, fmt.Errorf("unsupported integer value type %T", value)
+	}
+}
+
+func userStatusFilter(status string) (string, map[string]any) {
+	switch status {
+	case "blocked":
+		return "WHERE u.isBlocked = true", map[string]any{}
+	case "active":
+		return "WHERE u.isBlocked = false", map[string]any{}
+	default:
+		return "", map[string]any{}
+	}
 }

@@ -42,13 +42,15 @@ func main() {
 	jwtService := service.NewJWTService(cfg)
 	registrationService := service.NewUserRegistrationService(userRepository)
 	loginService := service.NewUserLoginService(userRepository, jwtService)
-	userController := controller.NewUserController(registrationService, loginService)
+	userListService := service.NewUserListService(userRepository)
+	userController := controller.NewUserController(registrationService, loginService, userListService)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
+	roleMiddleware := middleware.NewRoleMiddleware()
 	corsMiddleware := middleware.NewCORSMiddleware(cfg.CORSAllowedOrigins)
 
 	httpServer := &http.Server{
 		Addr:              ":" + cfg.ServerPort,
-		Handler:           server.NewRouter(userController, authMiddleware, corsMiddleware),
+		Handler:           server.NewRouter(userController, authMiddleware, roleMiddleware, corsMiddleware),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
