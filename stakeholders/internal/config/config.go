@@ -5,30 +5,40 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 type Config struct {
-	ServerPort    string
-	Neo4jURI      string
-	Neo4jUsername string
-	Neo4jPassword string
-	Neo4jDatabase string
+	ServerPort           string
+	Neo4jURI             string
+	Neo4jUsername        string
+	Neo4jPassword        string
+	Neo4jDatabase        string
+	JWTSecret            string
+	JWTIssuer            string
+	JWTExpirationMinutes int
 }
 
 func Load() (*Config, error) {
 	loadEnvFile(".env")
 
 	cfg := &Config{
-		ServerPort:    getEnv("SERVER_PORT", "8080"),
-		Neo4jURI:      getEnv("NEO4J_URI", "neo4j://localhost:7687"),
-		Neo4jUsername: getEnv("NEO4J_USERNAME", ""),
-		Neo4jPassword: getEnv("NEO4J_PASSWORD", ""),
-		Neo4jDatabase: getEnv("NEO4J_DATABASE", "neo4j"),
+		ServerPort:           getEnv("SERVER_PORT", "8080"),
+		Neo4jURI:             getEnv("NEO4J_URI", "neo4j://localhost:7687"),
+		Neo4jUsername:        getEnv("NEO4J_USERNAME", ""),
+		Neo4jPassword:        getEnv("NEO4J_PASSWORD", ""),
+		Neo4jDatabase:        getEnv("NEO4J_DATABASE", "neo4j"),
+		JWTSecret:            getEnv("JWT_SECRET", ""),
+		JWTIssuer:            getEnv("JWT_ISSUER", "stakeholders-service"),
+		JWTExpirationMinutes: getEnvAsInt("JWT_EXPIRATION_MINUTES", 60),
 	}
 
 	if cfg.Neo4jUsername == "" || cfg.Neo4jPassword == "" {
 		return nil, errors.New("NEO4J_USERNAME and NEO4J_PASSWORD must be set")
+	}
+	if cfg.JWTSecret == "" {
+		return nil, errors.New("JWT_SECRET must be set")
 	}
 
 	return cfg, nil
@@ -72,4 +82,18 @@ func getEnv(key, fallback string) string {
 	}
 
 	return value
+}
+
+func getEnvAsInt(key string, fallback int) int {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+
+	parsedValue, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+
+	return parsedValue
 }

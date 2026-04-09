@@ -4,12 +4,18 @@ import (
 	"net/http"
 
 	"soa-project/stakeholders/internal/controller"
+	"soa-project/stakeholders/internal/middleware"
 )
 
-func NewRouter(userController *controller.UserController) http.Handler {
+func NewRouter(
+	userController *controller.UserController,
+	authMiddleware *middleware.AuthMiddleware,
+) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", userController.Health)
 	mux.HandleFunc("/api/stakeholders/users/register", userController.RegisterUser)
+	mux.HandleFunc("/api/stakeholders/users/login", userController.LoginUser)
+	mux.HandleFunc("/api/stakeholders/users/me", authMiddleware.RequireAuth(userController.GetAuthenticatedUser))
 
 	return mux
 }

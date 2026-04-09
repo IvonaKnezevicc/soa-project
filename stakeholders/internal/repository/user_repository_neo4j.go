@@ -79,6 +79,37 @@ func (r *Neo4jUserRepository) FindByUsernameOrEmail(ctx context.Context, usernam
 	return user, nil
 }
 
+func (r *Neo4jUserRepository) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, `
+		MATCH (u:User)
+		WHERE u.username = $username
+		RETURN u
+		LIMIT 1
+	`, map[string]any{
+		"username": username,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !result.Next(ctx) {
+		if err := result.Err(); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+
+	node, err := getUserNode(result.Record())
+	if err != nil {
+		return nil, err
+	}
+
+	return mapNodeToUser(node)
+}
+
 func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) error {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
 	defer session.Close(ctx)
