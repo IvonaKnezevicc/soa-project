@@ -34,6 +34,10 @@ func main() {
 	if err := userRepository.EnsureConstraints(context.Background()); err != nil {
 		log.Fatalf("failed to ensure neo4j constraints: %v", err)
 	}
+	adminSeedService := service.NewAdminSeedService(userRepository)
+	if err := adminSeedService.SeedAdmins(context.Background()); err != nil {
+		log.Fatalf("failed to seed admin users: %v", err)
+	}
 
 	jwtService := service.NewJWTService(cfg)
 	registrationService := service.NewUserRegistrationService(userRepository)
