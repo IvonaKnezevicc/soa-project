@@ -1,0 +1,25 @@
+<section class="auth-card">
+  <h1 class="auth-title">Login</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+    <label>
+      <span>Username</span>
+      <input type="text" formControlName="username" placeholder="e.g. mihajlo" />
+    </label>
+
+    <label>
+      <span>Password</span>
+      <input type="password" formControlName="password" placeholder="Enter password" />
+    </label>
+
+    <button type="submit">Login</button>
+  </form>
+
+  <p class="message success" *ngIf="successMessage">{{ successMessage }}</p>
+  <p class="message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <p class="auth-link">
+    Don't have an account?
+    <a routerLink="/register">Register</a>
+  </p>
+</section>

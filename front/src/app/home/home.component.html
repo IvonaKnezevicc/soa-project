@@ -1,0 +1,16 @@
+<section class="hero">
+  <div class="status-card" *ngIf="currentUser$ | async as user; else loggedOut">
+    <h2>Authenticated user</h2>
+    <p><strong>ID:</strong> {{ user.id }}</p>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Role:</strong> {{ user.role }}</p>
+  </div>
+
+  <ng-template #loggedOut>
+    <div class="status-card">
+      <h2>No active user</h2>
+      <p>Sign in or register using the navigation above.</p>
+    </div>
+  </ng-template>
+</section>

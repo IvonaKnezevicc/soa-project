@@ -1,0 +1,38 @@
+<section class="auth-card">
+  <h1 class="auth-title">Register</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+    <label>
+      <span>Username</span>
+      <input type="text" formControlName="username" placeholder="e.g. mihajlo" />
+    </label>
+
+    <label>
+      <span>Email</span>
+      <input type="email" formControlName="email" placeholder="e.g. mihajlo@example.com" />
+    </label>
+
+    <label>
+      <span>Password</span>
+      <input type="password" formControlName="password" placeholder="Enter password" />
+    </label>
+
+    <label>
+      <span>Confirm password</span>
+      <input type="password" formControlName="confirmPassword" placeholder="Repeat password" />
+    </label>
+
+    <label>
+      <span>Role</span>
+      <select formControlName="role">
+        <option value="guide">Guide</option>
+        <option value="tourist">Tourist</option>
+      </select>
+    </label>
+
+    <button type="submit">Register</button>
+  </form>
+
+  <p class="message success" *ngIf="successMessage">{{ successMessage }}</p>
+  <p class="message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+</section>

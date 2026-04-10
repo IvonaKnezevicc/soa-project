@@ -1,0 +1,23 @@
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" [routerLink]="(currentUser$ | async) ? '/home' : '/login'">SOA Project</a>
+
+    <nav class="nav-links">
+      <ng-container *ngIf="!(currentUser$ | async); else authenticatedLinks">
+        <a routerLink="/login" routerLinkActive="active">Login</a>
+        <a routerLink="/register" routerLinkActive="active">Register</a>
+      </ng-container>
+
+      <ng-template #authenticatedLinks>
+        <a routerLink="/home" routerLinkActive="active">Home</a>
+        <a *ngIf="(currentUser$ | async)?.role === 'admin'" routerLink="/admin/users" routerLinkActive="active">Users</a>
+        <span class="user-pill">{{ (currentUser$ | async)?.username }}</span>
+        <button type="button" class="logout-button" (click)="logout()">Logout</button>
+      </ng-template>
+    </nav>
+  </header>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
