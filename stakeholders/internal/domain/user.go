@@ -13,6 +13,11 @@ type User struct {
 	Username     string
 	Email        string
 	PasswordHash string
+	FirstName    string
+	LastName     string
+	ProfileImage string
+	Biography    string
+	Motto        string
 	Role         string
 	IsBlocked    bool
 	CreatedAt    time.Time

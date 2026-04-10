@@ -17,6 +17,7 @@ type UserController struct {
 	loginService        service.UserLoginService
 	userListService     service.UserListService
 	userBlockService    service.UserBlockService
+	userProfileService  service.UserProfileService
 }
 
 func NewUserController(
@@ -24,12 +25,14 @@ func NewUserController(
 	loginService service.UserLoginService,
 	userListService service.UserListService,
 	userBlockService service.UserBlockService,
+	userProfileService service.UserProfileService,
 ) *UserController {
 	return &UserController{
 		registrationService: registrationService,
 		loginService:        loginService,
 		userListService:     userListService,
 		userBlockService:    userBlockService,
+		userProfileService:  userProfileService,
 	}
 }
 
@@ -191,6 +194,72 @@ func (c *UserController) Health(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (c *UserController) GetMyProfile(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
+		return
+	}
+
+	identity, ok := auth.IdentityFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, dto.ErrorResponse{Message: "authenticated user not found in context"})
+		return
+	}
+	if identity.Role == "admin" {
+		writeJSON(w, http.StatusForbidden, dto.ErrorResponse{Message: "admin users do not have profile management"})
+		return
+	}
+
+	response, err := c.userProfileService.GetProfile(r.Context(), identity.Username)
+	if err != nil {
+		switch {
+		case errors.Is(err, apperror.ErrValidation):
+			writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: err.Error()})
+		default:
+			writeJSON(w, http.StatusInternalServerError, dto.ErrorResponse{Message: "internal server error"})
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}
+
+func (c *UserController) UpdateMyProfile(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
+		return
+	}
+
+	identity, ok := auth.IdentityFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, dto.ErrorResponse{Message: "authenticated user not found in context"})
+		return
+	}
+	if identity.Role == "admin" {
+		writeJSON(w, http.StatusForbidden, dto.ErrorResponse{Message: "admin users do not have profile management"})
+		return
+	}
+
+	var request dto.UpdateUserProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: "invalid request body"})
+		return
+	}
+
+	response, err := c.userProfileService.UpdateProfile(r.Context(), identity.Username, request)
+	if err != nil {
+		switch {
+		case errors.Is(err, apperror.ErrValidation):
+			writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: err.Error()})
+		default:
+			writeJSON(w, http.StatusInternalServerError, dto.ErrorResponse{Message: "internal server error"})
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, response)
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {

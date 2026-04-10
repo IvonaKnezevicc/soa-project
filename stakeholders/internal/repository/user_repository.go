@@ -12,5 +12,9 @@ type UserRepository interface {
 	FindByUsername(ctx context.Context, username string) (*domain.User, error)
 	FindAllPaged(ctx context.Context, page, pageSize int, status string) ([]domain.User, int, error)
 	BlockByUsername(ctx context.Context, username string, blockedAt string) (*domain.User, error)
+	UpdateProfileByUsername(
+		ctx context.Context,
+		username, firstName, lastName, profileImage, biography, motto string,
+	) (*domain.User, error)
 	Create(ctx context.Context, user *domain.User) error
 }

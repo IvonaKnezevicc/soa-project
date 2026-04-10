@@ -5,6 +5,7 @@ import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { HomeComponent } from './home/home.component';
+import { ProfileComponent } from './profile/profile.component';
 import { adminGuard } from './services/admin.guard';
 import { authGuard } from './services/auth.guard';
 
@@ -13,6 +14,7 @@ const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'admin/users', component: AdminUsersComponent, canActivate: [authGuard, adminGuard] },
   { path: 'dashboard', component: HomeComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'login' }

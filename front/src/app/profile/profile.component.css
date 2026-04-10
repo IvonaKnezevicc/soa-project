@@ -1,0 +1,167 @@
+.profile-page {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.status-card {
+  padding: 1.5rem;
+  border-radius: 22px;
+  background: white;
+  border: 1px solid #dbe4ff;
+  box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
+  text-align: center;
+}
+
+.status-card h2 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.card-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 44px;
+  margin-bottom: 1.2rem;
+}
+
+.profile-details {
+  display: grid;
+  gap: 0.9rem;
+  justify-items: center;
+}
+
+.profile-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.profile-row p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.image-row {
+  min-height: 120px;
+}
+
+.field-label {
+  font-weight: 700;
+  font-size: 1.12rem;
+}
+
+.profile-image {
+  display: block;
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+}
+
+label {
+  font-weight: 600;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #fff;
+  padding: 0.7rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.edit-button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.95rem;
+}
+
+.pencil {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.error-message {
+  color: #b91c1c;
+  margin: 0;
+}
+
+.success-message {
+  color: #047857;
+  margin: 0;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: min(620px, 92vw);
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.3);
+}
+
+.modal-card h3 {
+  margin-top: 0;
+}
+
+form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.secondary-button {
+  background: #e2e8f0;
+  color: #0f172a;
+}

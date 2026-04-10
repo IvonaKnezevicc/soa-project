@@ -1,0 +1,80 @@
+<section class="profile-page" *ngIf="currentUser$ | async as user">
+  <div class="status-card" *ngIf="profileAllowed; else noProfileAccess">
+    <div class="card-header">
+      <h2>My profile</h2>
+      <button type="button" class="edit-button" (click)="openEditForm()" *ngIf="!isLoading">
+        <span class="pencil" aria-hidden="true">&#9998;</span>
+        <span>Edit profile</span>
+      </button>
+    </div>
+    <p class="muted" *ngIf="isLoading">Loading profile...</p>
+
+    <div class="profile-details" *ngIf="!isLoading">
+      <div class="profile-row image-row">
+        <img
+          [src]="profile?.profileImage || 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg'"
+          alt="Profile image"
+          class="profile-image"
+        />
+      </div>
+
+      <div class="profile-row">
+        <p class="field-label">First name:</p>
+        <p>{{ profile?.firstName || '' }}</p>
+      </div>
+
+      <div class="profile-row">
+        <p class="field-label">Last name:</p>
+        <p>{{ profile?.lastName || '' }}</p>
+      </div>
+
+      <div class="profile-row">
+        <p class="field-label">Biography:</p>
+        <p>{{ profile?.biography || '' }}</p>
+      </div>
+
+      <div class="profile-row">
+        <p class="field-label">Motto:</p>
+        <p>{{ profile?.motto || '' }}</p>
+      </div>
+
+      <p class="success-message" *ngIf="successMessage">{{ successMessage }}</p>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="isEditOpen">
+    <div class="modal-card">
+      <h3>Edit profile</h3>
+      <form [formGroup]="form" (ngSubmit)="saveProfile()">
+        <label for="firstName">First name</label>
+        <input id="firstName" type="text" formControlName="firstName" />
+
+        <label for="lastName">Last name</label>
+        <input id="lastName" type="text" formControlName="lastName" />
+
+        <label for="profileImageFile">Profile image</label>
+        <input id="profileImageFile" type="file" accept="image/*" (change)="onImageSelected($event)" />
+
+        <label for="biography">Biography</label>
+        <textarea id="biography" rows="4" formControlName="biography"></textarea>
+
+        <label for="motto">Motto</label>
+        <input id="motto" type="text" formControlName="motto" />
+
+        <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+        <div class="actions">
+          <button type="button" class="secondary-button" (click)="closeEditForm()">Cancel</button>
+          <button type="submit" [disabled]="isSaving">{{ isSaving ? 'Saving...' : 'Save changes' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <ng-template #noProfileAccess>
+    <div class="status-card">
+      <h2>Profile unavailable</h2>
+      <p>Profile management is available only for guide and tourist users.</p>
+    </div>
+  </ng-template>
+</section>
