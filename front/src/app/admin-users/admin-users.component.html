@@ -13,6 +13,7 @@
   </div>
 
   <p class="users-message" *ngIf="isLoading">Loading users...</p>
+  <p class="users-message success" *ngIf="actionMessage">{{ actionMessage }}</p>
   <p class="users-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
   <div class="users-table-wrapper" *ngIf="!isLoading && !errorMessage">
@@ -24,6 +25,8 @@
           <th>Role</th>
           <th>Blocked</th>
           <th>Created at</th>
+          <th>Blocked at</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -33,6 +36,24 @@
           <td><span class="role-pill">{{ user.role }}</span></td>
           <td>{{ user.isBlocked ? 'Yes' : 'No' }}</td>
           <td>{{ user.createdAt | date:'medium' }}</td>
+          <td>
+            <ng-container *ngIf="user.isBlocked; else activeUser">
+              {{ user.blockedAt | date:'medium' }}
+            </ng-container>
+            <ng-template #activeUser>{{ user.blockedAt }}</ng-template>
+          </td>
+          <td>
+            <button
+              *ngIf="!user.isBlocked && user.role !== 'admin'; else blockedState"
+              type="button"
+              class="block-button"
+              (click)="blockUser(user.username)">
+              Block
+            </button>
+            <ng-template #blockedState>
+              <span class="blocked-label">{{ user.isBlocked ? 'Blocked' : 'Unavailable' }}</span>
+            </ng-template>
+          </td>
         </tr>
       </tbody>
     </table>

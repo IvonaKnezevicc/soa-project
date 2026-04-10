@@ -6,6 +6,7 @@ type UserListItem struct {
 	Role      string `json:"role"`
 	IsBlocked bool   `json:"isBlocked"`
 	CreatedAt string `json:"createdAt"`
+	BlockedAt string `json:"blockedAt"`
 }
 
 type PagedUsersResponse struct {

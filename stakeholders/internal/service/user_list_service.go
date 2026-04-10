@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"time"
 
 	"soa-project/stakeholders/internal/apperror"
 	"soa-project/stakeholders/internal/dto"
@@ -45,6 +46,7 @@ func (s *userListService) GetPagedUsers(ctx context.Context, page int, status st
 			Role:      user.Role,
 			IsBlocked: user.IsBlocked,
 			CreatedAt: user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			BlockedAt: blockedAtLabel(user.BlockedAt),
 		})
 	}
 
@@ -61,4 +63,12 @@ func (s *userListService) GetPagedUsers(ctx context.Context, page int, status st
 		TotalPages: totalPages,
 		Status:     status,
 	}, nil
+}
+
+func blockedAtLabel(blockedAt *time.Time) string {
+	if blockedAt == nil {
+		return "User is active"
+	}
+
+	return blockedAt.Format(time.RFC3339)
 }

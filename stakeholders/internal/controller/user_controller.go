@@ -16,17 +16,20 @@ type UserController struct {
 	registrationService service.UserRegistrationService
 	loginService        service.UserLoginService
 	userListService     service.UserListService
+	userBlockService    service.UserBlockService
 }
 
 func NewUserController(
 	registrationService service.UserRegistrationService,
 	loginService service.UserLoginService,
 	userListService service.UserListService,
+	userBlockService service.UserBlockService,
 ) *UserController {
 	return &UserController{
 		registrationService: registrationService,
 		loginService:        loginService,
 		userListService:     userListService,
+		userBlockService:    userBlockService,
 	}
 }
 
@@ -141,6 +144,33 @@ func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, err := c.userListService.GetPagedUsers(r.Context(), page, status)
+	if err != nil {
+		switch {
+		case errors.Is(err, apperror.ErrValidation):
+			writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: err.Error()})
+		default:
+			writeJSON(w, http.StatusInternalServerError, dto.ErrorResponse{Message: "internal server error"})
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}
+
+func (c *UserController) BlockUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
+		return
+	}
+
+	identity, ok := auth.IdentityFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, dto.ErrorResponse{Message: "authenticated user not found in context"})
+		return
+	}
+
+	username := r.URL.Query().Get("username")
+	response, err := c.userBlockService.BlockUser(r.Context(), identity.Username, username)
 	if err != nil {
 		switch {
 		case errors.Is(err, apperror.ErrValidation):

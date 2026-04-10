@@ -4,4 +4,5 @@ export interface AdminUser {
   role: string;
   isBlocked: boolean;
   createdAt: string;
+  blockedAt: string;
 }

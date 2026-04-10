@@ -16,4 +16,5 @@ type User struct {
 	Role         string
 	IsBlocked    bool
 	CreatedAt    time.Time
+	BlockedAt    *time.Time
 }

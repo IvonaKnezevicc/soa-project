@@ -17,6 +17,7 @@ export class AdminUsersComponent implements OnInit {
   totalPages = 0;
   isLoading = false;
   errorMessage = '';
+  actionMessage = '';
   selectedStatus: UserStatusFilter = 'all';
 
   constructor(private readonly adminUsersService: AdminUsersService) {}
@@ -48,6 +49,32 @@ export class AdminUsersComponent implements OnInit {
 
     this.selectedStatus = status;
     this.loadUsers(1);
+  }
+
+  blockUser(username: string): void {
+    if (this.isLoading) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to block ${username}?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.actionMessage = '';
+    this.isLoading = true;
+
+    this.adminUsersService.blockUser(username).subscribe({
+      next: () => {
+        this.actionMessage = `User ${username} was blocked successfully.`;
+        this.loadUsers(this.page);
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? 'Failed to block user.';
+        this.isLoading = false;
+      }
+    });
   }
 
   private loadUsers(page: number): void {

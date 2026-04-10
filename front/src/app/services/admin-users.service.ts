@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { AdminUser } from '../models/admin-user.model';
 import { PagedUsersResponse } from '../models/paged-users-response.model';
 import { UserStatusFilter } from '../models/user-status-filter.model';
 
@@ -19,5 +20,10 @@ export class AdminUsersService {
       .set('status', status);
 
     return this.http.get<PagedUsersResponse>(this.baseUrl, { params });
+  }
+
+  blockUser(username: string): Observable<AdminUser> {
+    const params = new HttpParams().set('username', username);
+    return this.http.put<AdminUser>(`${this.baseUrl}/block`, {}, { params });
   }
 }

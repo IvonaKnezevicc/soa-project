@@ -192,7 +192,8 @@ func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) err
 			passwordHash: $passwordHash,
 			role: $role,
 			isBlocked: $isBlocked,
-			createdAt: datetime($createdAt)
+			createdAt: datetime($createdAt),
+			blockedAt: $blockedAt
 		})
 	`, map[string]any{
 		"id":           user.ID,
@@ -202,9 +203,44 @@ func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) err
 		"role":         user.Role,
 		"isBlocked":    user.IsBlocked,
 		"createdAt":    user.CreatedAt.Format(time.RFC3339),
+		"blockedAt":    nil,
 	})
 
 	return err
+}
+
+func (r *Neo4jUserRepository) BlockByUsername(ctx context.Context, username string, blockedAt string) (*domain.User, error) {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, `
+		MATCH (u:User)
+		WHERE u.username = $username
+		SET u.isBlocked = true,
+			u.blockedAt = datetime($blockedAt)
+		RETURN u
+		LIMIT 1
+	`, map[string]any{
+		"username":  username,
+		"blockedAt": blockedAt,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !result.Next(ctx) {
+		if err := result.Err(); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+
+	node, err := getUserNode(result.Record())
+	if err != nil {
+		return nil, err
+	}
+
+	return mapNodeToUser(node)
 }
 
 func getUserNode(record *neo4j.Record) (dbtype.Node, error) {
@@ -230,6 +266,7 @@ func mapNodeToUser(node dbtype.Node) (*domain.User, error) {
 		Role:         stringValue(node.Props["role"]),
 		IsBlocked:    boolValue(node.Props["isBlocked"]),
 		CreatedAt:    timeValue(node.Props["createdAt"]),
+		BlockedAt:    optionalTimeValue(node.Props["blockedAt"]),
 	}, nil
 }
 
@@ -252,6 +289,16 @@ func timeValue(value any) time.Time {
 		return typed
 	}
 	return time.Time{}
+}
+
+func optionalTimeValue(value any) *time.Time {
+	if value == nil {
+		return nil
+	}
+	if typed, ok := value.(time.Time); ok {
+		return &typed
+	}
+	return nil
 }
 
 func intValue(value any) (int, error) {
