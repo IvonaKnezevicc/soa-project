@@ -1,16 +1,73 @@
 <section class="hero">
-  <div class="status-card" *ngIf="currentUser$ | async as user; else loggedOut">
-    <h2>Authenticated user</h2>
-    <p><strong>ID:</strong> {{ user.id }}</p>
-    <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Role:</strong> {{ user.role }}</p>
+  <ng-container *ngIf="isAdmin">
+    <app-admin-users></app-admin-users>
+  </ng-container>
+
+  <ng-container *ngIf="!isAdmin">
+  <div class="header-row">
+    <h2>Blogs</h2>
   </div>
 
-  <ng-template #loggedOut>
-    <div class="status-card">
-      <h2>No active user</h2>
-      <p>Sign in or register using the navigation above.</p>
+  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p *ngIf="isLoading">Loading blogs...</p>
+
+  <div class="blog-grid" *ngIf="!isLoading">
+    <button type="button" class="create-tile" (click)="openCreate()">
+      <span class="plus">+</span>
+      <span>Create new blog</span>
+    </button>
+
+    <article class="blog-card" *ngFor="let post of posts">
+      <h3>{{ post.title }}</h3>
+      <p class="meta">
+        By {{ post.authorUsername }} | {{ post.createdAt | date:'medium' }}
+      </p>
+      <div class="markdown-output" [innerHTML]="post.renderedDescription"></div>
+
+      <div class="images" *ngIf="post.imageUrls.length > 0">
+        <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Blog image" />
+      </div>
+    </article>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="isCreateOpen">
+    <div class="modal-card">
+      <h3>Create blog</h3>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <label for="title">Title</label>
+        <input id="title" type="text" formControlName="title" placeholder="Blog topic/title" />
+        <p class="error" *ngIf="form.controls.title.touched && form.controls.title.errors?.['required']">
+          Title is required.
+        </p>
+
+        <label for="descriptionMarkdown">Description</label>
+        <textarea
+          id="descriptionMarkdown"
+          rows="8"
+          formControlName="descriptionMarkdown"
+          placeholder="Use Markdown, for example: **bold**, ## heading, - list"
+        ></textarea>
+        <p
+          class="error"
+          *ngIf="form.controls.descriptionMarkdown.touched && form.controls.descriptionMarkdown.errors?.['required']"
+        >
+          Description is required.
+        </p>
+
+        <label for="imagesInput">Images (optional)</label>
+        <input id="imagesInput" type="file" accept="image/*" multiple (change)="onImagesSelected($event)" />
+        <p class="selected-images" *ngIf="selectedImageNames.length > 0">
+          {{ selectedImageNames.length }} image(s) selected
+        </p>
+
+        <p class="error" *ngIf="createErrorMessage">{{ createErrorMessage }}</p>
+
+        <div class="actions">
+          <button type="button" class="secondary-button" (click)="closeCreate()">Cancel</button>
+          <button type="submit" [disabled]="isSubmitting">{{ isSubmitting ? 'Creating...' : 'Create blog' }}</button>
+        </div>
+      </form>
     </div>
-  </ng-template>
+  </div>
+  </ng-container>
 </section>

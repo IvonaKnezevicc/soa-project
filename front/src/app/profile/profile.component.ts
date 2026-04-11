@@ -20,6 +20,7 @@ export class ProfileComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   profileAllowed = false;
+  private successMessageTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   readonly form = this.formBuilder.group({
     firstName: ['', [Validators.maxLength(100)]],
@@ -83,6 +84,7 @@ export class ProfileComponent implements OnInit {
       next: (profile) => {
         this.profile = profile;
         this.successMessage = 'Profile updated successfully.';
+        this.startSuccessMessageAutoHide();
         this.isSaving = false;
         this.isEditOpen = false;
       },
@@ -91,6 +93,17 @@ export class ProfileComponent implements OnInit {
         this.isSaving = false;
       }
     });
+  }
+
+  private startSuccessMessageAutoHide(): void {
+    if (this.successMessageTimeoutId) {
+      clearTimeout(this.successMessageTimeoutId);
+    }
+
+    this.successMessageTimeoutId = setTimeout(() => {
+      this.successMessage = '';
+      this.successMessageTimeoutId = null;
+    }, 3000);
   }
 
   openEditForm(): void {

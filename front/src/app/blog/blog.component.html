@@ -1,0 +1,60 @@
+<section class="blog-shell">
+  <div class="status-card">
+    <h2>Create Blog Post</h2>
+    <p *ngIf="isLoading">Checking blog service...</p>
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div *ngIf="status && !isLoading">
+      <p><strong>Service:</strong> {{ status.service }}</p>
+      <p><strong>Status:</strong> {{ status.status }}</p>
+      <p>Write blog description in Markdown.</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label for="title">Title</label>
+      <input id="title" type="text" formControlName="title" placeholder="Blog topic/title" />
+
+      <label for="descriptionMarkdown">Description (Markdown)</label>
+      <textarea
+        id="descriptionMarkdown"
+        rows="8"
+        formControlName="descriptionMarkdown"
+        placeholder="Use Markdown, for example: **bold**, ## heading, - list"
+      ></textarea>
+
+      <label for="imageUrlsText">Image URLs (optional)</label>
+      <textarea
+        id="imageUrlsText"
+        rows="3"
+        formControlName="imageUrlsText"
+        placeholder="One URL per line, or comma separated"
+      ></textarea>
+
+      <p class="error" *ngIf="createErrorMessage">{{ createErrorMessage }}</p>
+      <p class="success" *ngIf="createSuccessMessage">{{ createSuccessMessage }}</p>
+
+      <button type="submit" [disabled]="isSubmitting || isLoading">
+        {{ isSubmitting ? 'Creating...' : 'Create blog post' }}
+      </button>
+    </form>
+
+    <div class="created-post" *ngIf="createdPost">
+      <h3>Created post</h3>
+      <p><strong>Title:</strong> {{ createdPost.title }}</p>
+      <p><strong>Author:</strong> {{ createdPost.authorUsername }}</p>
+      <p><strong>Created at:</strong> {{ createdPost.createdAt }}</p>
+
+      <p><strong>Description (rendered):</strong></p>
+      <div class="markdown-output" [innerHTML]="renderedDescription"></div>
+
+      <div *ngIf="createdPost.imageUrls.length > 0">
+        <p><strong>Images:</strong></p>
+        <ul>
+          <li *ngFor="let imageUrl of createdPost.imageUrls">
+            <a [href]="imageUrl" target="_blank" rel="noreferrer">{{ imageUrl }}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

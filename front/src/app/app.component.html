@@ -10,7 +10,6 @@
 
       <ng-template #authenticatedLinks>
         <a routerLink="/home" routerLinkActive="active">Home</a>
-        <a *ngIf="(currentUser$ | async)?.role === 'admin'" routerLink="/admin/users" routerLinkActive="active">Users</a>
         <button
           *ngIf="(currentUser$ | async)?.role !== 'admin'"
           type="button"
