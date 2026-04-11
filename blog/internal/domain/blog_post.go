@@ -11,4 +11,17 @@ type BlogPost struct {
 	CreatedAt           time.Time
 	AuthorUsername      string
 	AuthorRole          string
+	Comments            []Comment
+}
+
+type Comment struct {
+	ID             string
+	PostID         string
+	Text           string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	AuthorUserID   string
+	AuthorUsername string
+	AuthorEmail    string
+	AuthorRole     string
 }

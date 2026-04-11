@@ -187,6 +187,7 @@ func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) err
 	_, err := session.Run(ctx, `
 		CREATE (u:User {
 			id: $id,
+			name: $name,
 			username: $username,
 			email: $email,
 			passwordHash: $passwordHash,
@@ -202,6 +203,7 @@ func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) err
 		})
 	`, map[string]any{
 		"id":           user.ID,
+		"name":         user.Username,
 		"username":     user.Username,
 		"email":        user.Email,
 		"passwordHash": user.PasswordHash,
@@ -265,6 +267,7 @@ func (r *Neo4jUserRepository) UpdateProfileByUsername(
 		WHERE u.username = $username
 		SET u.firstName = $firstName,
 			u.lastName = $lastName,
+			u.name = $username,
 			u.profileImage = $profileImage,
 			u.biography = $biography,
 			u.motto = $motto

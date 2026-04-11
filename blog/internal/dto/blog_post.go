@@ -14,6 +14,23 @@ type BlogPostResponse struct {
 	ImageURLs           []string `json:"imageUrls"`
 	CreatedAt           string   `json:"createdAt"`
 	AuthorUsername      string   `json:"authorUsername"`
+	Comments            []CommentResponse `json:"comments"`
+}
+
+type CreateCommentRequest struct {
+	Text string `json:"text"`
+}
+
+type CommentResponse struct {
+	ID             string `json:"id"`
+	PostID         string `json:"postId"`
+	Text           string `json:"text"`
+	CreatedAt      string `json:"createdAt"`
+	UpdatedAt      string `json:"updatedAt"`
+	AuthorUserID   string `json:"authorUserId"`
+	AuthorUsername string `json:"authorUsername"`
+	AuthorEmail    string `json:"authorEmail"`
+	AuthorRole     string `json:"authorRole"`
 }
 
 type ErrorResponse struct {

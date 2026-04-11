@@ -60,6 +60,54 @@
   border-radius: 10px;
 }
 
+.comments-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.comments-section h4 {
+  margin: 0 0 0.75rem;
+}
+
+.empty-comments {
+  margin: 0 0 0.75rem;
+  color: #64748b;
+}
+
+.comment-card {
+  border: 1px solid #dbe4ff;
+  border-radius: 14px;
+  padding: 0.85rem;
+  background: #f8fbff;
+}
+
+.comment-card + .comment-card {
+  margin-top: 0.75rem;
+}
+
+.comment-meta {
+  margin: 0;
+  font-weight: 600;
+  color: #334155;
+}
+
+.comment-updated {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.comment-text {
+  margin: 0.6rem 0 0;
+}
+
+.comment-form {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
 .create-tile {
   display: flex;
   flex-direction: column;

@@ -20,6 +20,12 @@ import (
 
 type BlogPostService interface {
 	Create(ctx context.Context, identity auth.Identity, request dto.CreateBlogPostRequest) (*dto.BlogPostResponse, error)
+	CreateComment(
+		ctx context.Context,
+		identity auth.Identity,
+		postID string,
+		request dto.CreateCommentRequest,
+	) (*dto.CommentResponse, error)
 	GetAll(ctx context.Context) ([]dto.BlogPostResponse, error)
 }
 
@@ -93,6 +99,16 @@ func (s *blogPostService) GetAll(ctx context.Context) ([]dto.BlogPostResponse, e
 		return nil, err
 	}
 
+	postIDs := make([]string, 0, len(posts))
+	for _, post := range posts {
+		postIDs = append(postIDs, post.ID)
+	}
+
+	commentsByPostID, err := s.blogPostRepository.FindCommentsByPostIDs(ctx, postIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	response := make([]dto.BlogPostResponse, 0, len(posts))
 	for _, post := range posts {
 		response = append(response, dto.BlogPostResponse{
@@ -103,10 +119,68 @@ func (s *blogPostService) GetAll(ctx context.Context) ([]dto.BlogPostResponse, e
 			ImageURLs:           post.ImageURLs,
 			CreatedAt:           post.CreatedAt.Format(time.RFC3339),
 			AuthorUsername:      post.AuthorUsername,
+			Comments:            mapCommentsToResponse(commentsByPostID[post.ID]),
 		})
 	}
 
 	return response, nil
+}
+
+func (s *blogPostService) CreateComment(
+	ctx context.Context,
+	identity auth.Identity,
+	postID string,
+	request dto.CreateCommentRequest,
+) (*dto.CommentResponse, error) {
+	postID = strings.TrimSpace(postID)
+	text := strings.TrimSpace(request.Text)
+
+	if postID == "" {
+		return nil, fmt.Errorf("%w: postId is required", apperror.ErrValidation)
+	}
+	if text == "" {
+		return nil, fmt.Errorf("%w: text is required", apperror.ErrValidation)
+	}
+	if len(text) > 2000 {
+		return nil, fmt.Errorf("%w: comment text is too long", apperror.ErrValidation)
+	}
+
+	post, err := s.blogPostRepository.FindByID(ctx, postID)
+	if err != nil {
+		return nil, err
+	}
+	if post == nil {
+		return nil, fmt.Errorf("%w: blog post not found", apperror.ErrValidation)
+	}
+
+	now := time.Now().UTC()
+	comment := &domain.Comment{
+		ID:             generateID(),
+		PostID:         postID,
+		Text:           text,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+		AuthorUserID:   identity.UserID,
+		AuthorUsername: identity.Username,
+		AuthorEmail:    identity.Email,
+		AuthorRole:     identity.Role,
+	}
+
+	if err := s.blogPostRepository.CreateComment(ctx, comment); err != nil {
+		return nil, err
+	}
+
+	return &dto.CommentResponse{
+		ID:             comment.ID,
+		PostID:         comment.PostID,
+		Text:           comment.Text,
+		CreatedAt:      comment.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:      comment.UpdatedAt.Format(time.RFC3339),
+		AuthorUserID:   comment.AuthorUserID,
+		AuthorUsername: comment.AuthorUsername,
+		AuthorEmail:    comment.AuthorEmail,
+		AuthorRole:     comment.AuthorRole,
+	}, nil
 }
 
 func markdownToHTML(markdown string) (string, error) {
@@ -135,6 +209,25 @@ func normalizeImageURLs(imageURLs []string) ([]string, error) {
 	}
 
 	return normalized, nil
+}
+
+func mapCommentsToResponse(comments []domain.Comment) []dto.CommentResponse {
+	response := make([]dto.CommentResponse, 0, len(comments))
+	for _, comment := range comments {
+		response = append(response, dto.CommentResponse{
+			ID:             comment.ID,
+			PostID:         comment.PostID,
+			Text:           comment.Text,
+			CreatedAt:      comment.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:      comment.UpdatedAt.Format(time.RFC3339),
+			AuthorUserID:   comment.AuthorUserID,
+			AuthorUsername: comment.AuthorUsername,
+			AuthorEmail:    comment.AuthorEmail,
+			AuthorRole:     comment.AuthorRole,
+		})
+	}
+
+	return response
 }
 
 func generateID() string {

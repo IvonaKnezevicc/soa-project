@@ -18,6 +18,9 @@ export class HomeComponent implements OnInit {
   posts: BlogPostView[] = [];
   selectedImages: string[] = [];
   selectedImageNames: string[] = [];
+  commentTexts: Record<string, string> = {};
+  commentSubmitting: Record<string, boolean> = {};
+  commentErrorMessages: Record<string, string> = {};
   isAdmin = false;
   isLoading = false;
   isSubmitting = false;
@@ -60,6 +63,10 @@ export class HomeComponent implements OnInit {
           ...post,
           renderedDescription: this.sanitizer.bypassSecurityTrustHtml(post.descriptionHtml)
         }));
+        this.commentTexts = this.posts.reduce<Record<string, string>>((accumulator, post) => {
+          accumulator[post.id] = this.commentTexts[post.id] ?? '';
+          return accumulator;
+        }, {});
         this.isLoading = false;
       },
       error: () => {
@@ -109,6 +116,33 @@ export class HomeComponent implements OnInit {
       error: (error) => {
         this.createErrorMessage = error?.error?.message ?? 'Failed to create blog post.';
         this.isSubmitting = false;
+      }
+    });
+  }
+
+  updateCommentText(postId: string, value: string): void {
+    this.commentTexts[postId] = value;
+  }
+
+  submitComment(postId: string): void {
+    const text = (this.commentTexts[postId] ?? '').trim();
+    this.commentErrorMessages[postId] = '';
+
+    if (!text) {
+      this.commentErrorMessages[postId] = 'Comment text is required.';
+      return;
+    }
+
+    this.commentSubmitting[postId] = true;
+    this.blogService.createComment(postId, { text }).subscribe({
+      next: () => {
+        this.commentTexts[postId] = '';
+        this.commentSubmitting[postId] = false;
+        this.loadPosts();
+      },
+      error: (error) => {
+        this.commentErrorMessages[postId] = error?.error?.message ?? 'Failed to create comment.';
+        this.commentSubmitting[postId] = false;
       }
     });
   }

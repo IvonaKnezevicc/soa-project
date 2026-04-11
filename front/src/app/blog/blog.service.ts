@@ -2,7 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { BlogPostResponse, BlogStartupStatus, CreateBlogPostRequest } from './blog.model';
+import {
+  BlogPostResponse,
+  BlogStartupStatus,
+  CommentResponse,
+  CreateBlogPostRequest,
+  CreateCommentRequest
+} from './blog.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,5 +28,9 @@ export class BlogService {
 
   createBlogPost(payload: CreateBlogPostRequest): Observable<BlogPostResponse> {
     return this.http.post<BlogPostResponse>(`${this.baseUrl}/api/blog/posts`, payload);
+  }
+
+  createComment(postId: string, payload: CreateCommentRequest): Observable<CommentResponse> {
+    return this.http.post<CommentResponse>(`${this.baseUrl}/api/blog/posts/${postId}/comments`, payload);
   }
 }

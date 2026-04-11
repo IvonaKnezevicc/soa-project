@@ -1,6 +1,6 @@
 <div class="app-shell">
   <header class="topbar">
-    <a class="brand" [routerLink]="(currentUser$ | async) ? '/home' : '/login'">SOA Project</a>
+    <a class="brand" [routerLink]="(currentUser$ | async) ? '/home' : '/login'">TravelMania</a>
 
     <nav class="nav-links">
       <ng-container *ngIf="!(currentUser$ | async); else authenticatedLinks">

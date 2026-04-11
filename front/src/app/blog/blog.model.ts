@@ -17,4 +17,21 @@ export interface BlogPostResponse {
   imageUrls: string[];
   createdAt: string;
   authorUsername: string;
+  comments: CommentResponse[];
+}
+
+export interface CreateCommentRequest {
+  text: string;
+}
+
+export interface CommentResponse {
+  id: string;
+  postId: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+  authorUserId: string;
+  authorUsername: string;
+  authorEmail: string;
+  authorRole: string;
 }
