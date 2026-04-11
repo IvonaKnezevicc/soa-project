@@ -16,6 +16,12 @@
       <span>Password</span>
       <input type="password" formControlName="password" placeholder="Enter password" />
     </label>
+    <p
+      class="message error"
+      *ngIf="form.controls.password.touched && form.controls.password.errors?.['minlength']"
+    >
+      Password must contain at least 5 characters.
+    </p>
 
     <label>
       <span>Confirm password</span>

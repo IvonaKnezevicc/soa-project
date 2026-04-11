@@ -10,8 +10,18 @@
 
       <ng-template #authenticatedLinks>
         <a routerLink="/home" routerLinkActive="active">Home</a>
-        <a *ngIf="(currentUser$ | async)?.role === 'admin'" routerLink="/admin/users" routerLinkActive="active">Users</a>
-        <span class="user-pill">{{ (currentUser$ | async)?.username }}</span>
+        <button
+          *ngIf="(currentUser$ | async)?.role !== 'admin'"
+          type="button"
+          class="user-pill profile-button"
+          routerLink="/profile"
+          routerLinkActive="active"
+        >
+          <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
+          </svg>
+          <span>{{ (currentUser$ | async)?.username }}</span>
+        </button>
         <button type="button" class="logout-button" (click)="logout()">Logout</button>
       </ng-template>
     </nav>

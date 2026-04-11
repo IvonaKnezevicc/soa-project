@@ -7,7 +7,9 @@ import { AuthResponse } from '../models/auth-response.model';
 import { LoginRequest } from '../models/login-request.model';
 import { RegisterRequest } from '../models/register-request.model';
 import { RegisterResponse } from '../models/register-response.model';
+import { UpdateUserProfileRequest } from '../models/update-user-profile-request.model';
 import { User } from '../models/user.model';
+import { UserProfile } from '../models/user-profile.model';
 import { TokenService } from './token.service';
 
 @Injectable({
@@ -62,6 +64,14 @@ export class AuthService {
     return this.http.get<User>(`${this.baseUrl}/me`).pipe(
       tap((user) => this.currentUserSubject.next(user))
     );
+  }
+
+  getMyProfile(): Observable<UserProfile> {
+    return this.http.get<UserProfile>(`${this.baseUrl}/profile`);
+  }
+
+  updateMyProfile(payload: UpdateUserProfileRequest): Observable<UserProfile> {
+    return this.http.put<UserProfile>(`${this.baseUrl}/profile`, payload);
   }
 
   private restoreSession(): void {

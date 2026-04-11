@@ -190,6 +190,11 @@ func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) err
 			username: $username,
 			email: $email,
 			passwordHash: $passwordHash,
+			firstName: $firstName,
+			lastName: $lastName,
+			profileImage: $profileImage,
+			biography: $biography,
+			motto: $motto,
 			role: $role,
 			isBlocked: $isBlocked,
 			createdAt: datetime($createdAt),
@@ -200,6 +205,11 @@ func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) err
 		"username":     user.Username,
 		"email":        user.Email,
 		"passwordHash": user.PasswordHash,
+		"firstName":    user.FirstName,
+		"lastName":     user.LastName,
+		"profileImage": user.ProfileImage,
+		"biography":    user.Biography,
+		"motto":        user.Motto,
 		"role":         user.Role,
 		"isBlocked":    user.IsBlocked,
 		"createdAt":    user.CreatedAt.Format(time.RFC3339),
@@ -243,6 +253,50 @@ func (r *Neo4jUserRepository) BlockByUsername(ctx context.Context, username stri
 	return mapNodeToUser(node)
 }
 
+func (r *Neo4jUserRepository) UpdateProfileByUsername(
+	ctx context.Context,
+	username, firstName, lastName, profileImage, biography, motto string,
+) (*domain.User, error) {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, `
+		MATCH (u:User)
+		WHERE u.username = $username
+		SET u.firstName = $firstName,
+			u.lastName = $lastName,
+			u.profileImage = $profileImage,
+			u.biography = $biography,
+			u.motto = $motto
+		RETURN u
+		LIMIT 1
+	`, map[string]any{
+		"username":     username,
+		"firstName":    firstName,
+		"lastName":     lastName,
+		"profileImage": profileImage,
+		"biography":    biography,
+		"motto":        motto,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !result.Next(ctx) {
+		if err := result.Err(); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+
+	node, err := getUserNode(result.Record())
+	if err != nil {
+		return nil, err
+	}
+
+	return mapNodeToUser(node)
+}
+
 func getUserNode(record *neo4j.Record) (dbtype.Node, error) {
 	value, found := record.Get("u")
 	if !found {
@@ -263,6 +317,11 @@ func mapNodeToUser(node dbtype.Node) (*domain.User, error) {
 		Username:     stringValue(node.Props["username"]),
 		Email:        stringValue(node.Props["email"]),
 		PasswordHash: stringValue(node.Props["passwordHash"]),
+		FirstName:    stringValue(node.Props["firstName"]),
+		LastName:     stringValue(node.Props["lastName"]),
+		ProfileImage: stringValue(node.Props["profileImage"]),
+		Biography:    stringValue(node.Props["biography"]),
+		Motto:        stringValue(node.Props["motto"]),
 		Role:         stringValue(node.Props["role"]),
 		IsBlocked:    boolValue(node.Props["isBlocked"]),
 		CreatedAt:    timeValue(node.Props["createdAt"]),

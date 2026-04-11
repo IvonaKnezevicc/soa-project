@@ -9,6 +9,7 @@ import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { HomeComponent } from './home/home.component';
+import { ProfileComponent } from './profile/profile.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 
 @NgModule({
@@ -17,7 +18,8 @@ import { AuthInterceptor } from './services/auth.interceptor';
     AdminUsersComponent,
     LoginComponent,
     RegisterComponent,
-    HomeComponent
+    HomeComponent,
+    ProfileComponent
   ],
   imports: [
     BrowserModule,

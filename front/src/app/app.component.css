@@ -39,12 +39,31 @@
 }
 
 .user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
   background: #dbeafe;
   color: #1d4ed8;
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.profile-button {
+  border: 1px solid #bfdbfe;
+  cursor: pointer;
+}
+
+.profile-button.active {
+  background: #bfdbfe;
+}
+
+.user-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  transform: translateY(1px);
 }
 
 .logout-button {

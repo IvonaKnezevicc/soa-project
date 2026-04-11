@@ -44,7 +44,14 @@ func main() {
 	loginService := service.NewUserLoginService(userRepository, jwtService)
 	userListService := service.NewUserListService(userRepository)
 	userBlockService := service.NewUserBlockService(userRepository)
-	userController := controller.NewUserController(registrationService, loginService, userListService, userBlockService)
+	userProfileService := service.NewUserProfileService(userRepository)
+	userController := controller.NewUserController(
+		registrationService,
+		loginService,
+		userListService,
+		userBlockService,
+		userProfileService,
+	)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	roleMiddleware := middleware.NewRoleMiddleware()
 	corsMiddleware := middleware.NewCORSMiddleware(cfg.CORSAllowedOrigins)
