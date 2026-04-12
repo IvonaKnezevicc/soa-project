@@ -32,6 +32,14 @@ func NewRouter(
 			blogPostController.CreateComment(w, r)
 			return
 		}
+		if r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/like") {
+			blogPostController.LikePost(w, r)
+			return
+		}
+		if r.Method == http.MethodDelete && strings.HasSuffix(r.URL.Path, "/like") {
+			blogPostController.UnlikePost(w, r)
+			return
+		}
 
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}))

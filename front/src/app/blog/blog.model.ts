@@ -18,6 +18,8 @@ export interface BlogPostResponse {
   createdAt: string;
   authorUsername: string;
   comments: CommentResponse[];
+  likeCount: number;
+  likedByCurrentUser: boolean;
 }
 
 export interface CreateCommentRequest {

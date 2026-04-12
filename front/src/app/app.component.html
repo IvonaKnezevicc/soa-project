@@ -11,6 +11,14 @@
       <ng-template #authenticatedLinks>
         <a routerLink="/home" routerLinkActive="active">Home</a>
         <button
+          *ngIf="(currentUser$ | async)?.role !== 'admin' && isHomeRoute"
+          type="button"
+          class="create-blog-button"
+          (click)="openCreateBlog()"
+        >
+          Create blog
+        </button>
+        <button
           *ngIf="(currentUser$ | async)?.role !== 'admin'"
           type="button"
           class="user-pill profile-button"

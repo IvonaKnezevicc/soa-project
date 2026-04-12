@@ -7,6 +7,7 @@ import { BlogPostResponse } from '../blog/blog.model';
 import { BlogService } from '../blog/blog.service';
 import { User } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
+import { HomeActionsService } from '../services/home-actions.service';
 
 @Component({
   selector: 'app-home',
@@ -21,6 +22,8 @@ export class HomeComponent implements OnInit {
   commentTexts: Record<string, string> = {};
   commentSubmitting: Record<string, boolean> = {};
   commentErrorMessages: Record<string, string> = {};
+  likeSubmitting: Record<string, boolean> = {};
+  likeErrorMessages: Record<string, string> = {};
   isAdmin = false;
   isLoading = false;
   isSubmitting = false;
@@ -37,12 +40,19 @@ export class HomeComponent implements OnInit {
     private readonly blogService: BlogService,
     private readonly formBuilder: NonNullableFormBuilder,
     private readonly sanitizer: DomSanitizer,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly homeActionsService: HomeActionsService
   ) {
     this.currentUser$ = this.authService.currentUser$;
   }
 
   ngOnInit(): void {
+    this.homeActionsService.openCreateBlog$.subscribe(() => {
+      if (!this.isAdmin) {
+        this.openCreate();
+      }
+    });
+
     this.currentUser$.subscribe((user) => {
       this.isAdmin = user?.role === 'admin';
       if (!this.isAdmin) {
@@ -143,6 +153,26 @@ export class HomeComponent implements OnInit {
       error: (error) => {
         this.commentErrorMessages[postId] = error?.error?.message ?? 'Failed to create comment.';
         this.commentSubmitting[postId] = false;
+      }
+    });
+  }
+
+  toggleLike(postId: string, likedByCurrentUser: boolean): void {
+    this.likeErrorMessages[postId] = '';
+    this.likeSubmitting[postId] = true;
+
+    const request$ = likedByCurrentUser
+      ? this.blogService.unlikePost(postId)
+      : this.blogService.likePost(postId);
+
+    request$.subscribe({
+      next: () => {
+        this.likeSubmitting[postId] = false;
+        this.loadPosts();
+      },
+      error: (error) => {
+        this.likeErrorMessages[postId] = error?.error?.message ?? 'Failed to update like.';
+        this.likeSubmitting[postId] = false;
       }
     });
   }

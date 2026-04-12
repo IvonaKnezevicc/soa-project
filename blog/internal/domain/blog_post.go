@@ -12,6 +12,8 @@ type BlogPost struct {
 	AuthorUsername      string
 	AuthorRole          string
 	Comments            []Comment
+	LikeCount           int
+	LikedByCurrentUser  bool
 }
 
 type Comment struct {

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -260,6 +261,157 @@ func (r *Neo4jBlogPostRepository) FindCommentsByPostIDs(
 	return commentsByPostID, nil
 }
 
+func (r *Neo4jBlogPostRepository) LikePost(
+	ctx context.Context,
+	postID string,
+	userID, username, email, role string,
+) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	_, err := session.Run(ctx, `
+		MATCH (b:BlogPost)
+		WHERE b.id = $postId
+		MERGE (u:BlogUser {userId: $userId})
+		SET u.username = $username,
+			u.email = $email,
+			u.role = $role
+		MERGE (u)-[:LIKED]->(b)
+	`, map[string]any{
+		"postId":   postID,
+		"userId":   userID,
+		"username": username,
+		"email":    email,
+		"role":     role,
+	})
+
+	return err
+}
+
+func (r *Neo4jBlogPostRepository) UnlikePost(ctx context.Context, postID, userID string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	_, err := session.Run(ctx, `
+		MATCH (u:BlogUser {userId: $userId})-[r:LIKED]->(b:BlogPost {id: $postId})
+		DELETE r
+	`, map[string]any{
+		"postId": postID,
+		"userId": userID,
+	})
+
+	return err
+}
+
+func (r *Neo4jBlogPostRepository) FindLikeCountsByPostIDs(
+	ctx context.Context,
+	postIDs []string,
+) (map[string]int, error) {
+	likeCountsByPostID := make(map[string]int, len(postIDs))
+	for _, postID := range postIDs {
+		likeCountsByPostID[postID] = 0
+	}
+
+	if len(postIDs) == 0 {
+		return likeCountsByPostID, nil
+	}
+
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, `
+		MATCH (b:BlogPost)
+		WHERE b.id IN $postIds
+		OPTIONAL MATCH (:BlogUser)-[r:LIKED]->(b)
+		RETURN b.id AS postId, count(r) AS likeCount
+	`, map[string]any{
+		"postIds": postIDs,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for result.Next(ctx) {
+		postIDValue, found := result.Record().Get("postId")
+		if !found {
+			continue
+		}
+
+		postID, ok := postIDValue.(string)
+		if !ok {
+			continue
+		}
+
+		likeCountValue, found := result.Record().Get("likeCount")
+		if !found {
+			continue
+		}
+
+		likeCount, err := intValue(likeCountValue)
+		if err != nil {
+			return nil, err
+		}
+
+		likeCountsByPostID[postID] = likeCount
+	}
+
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+
+	return likeCountsByPostID, nil
+}
+
+func (r *Neo4jBlogPostRepository) FindLikedPostIDsByUser(
+	ctx context.Context,
+	postIDs []string,
+	userID string,
+) (map[string]bool, error) {
+	likedPostIDs := make(map[string]bool, len(postIDs))
+	for _, postID := range postIDs {
+		likedPostIDs[postID] = false
+	}
+
+	if len(postIDs) == 0 || userID == "" {
+		return likedPostIDs, nil
+	}
+
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, `
+		MATCH (:BlogUser {userId: $userId})-[:LIKED]->(b:BlogPost)
+		WHERE b.id IN $postIds
+		RETURN b.id AS postId
+	`, map[string]any{
+		"userId":  userID,
+		"postIds": postIDs,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for result.Next(ctx) {
+		postIDValue, found := result.Record().Get("postId")
+		if !found {
+			continue
+		}
+
+		postID, ok := postIDValue.(string)
+		if !ok {
+			continue
+		}
+
+		likedPostIDs[postID] = true
+	}
+
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+
+	return likedPostIDs, nil
+}
+
 func stringValue(value any) string {
 	if typed, ok := value.(string); ok {
 		return typed
@@ -289,6 +441,17 @@ func timeValue(value any) time.Time {
 		return typed
 	}
 	return time.Time{}
+}
+
+func intValue(value any) (int, error) {
+	switch typed := value.(type) {
+	case int64:
+		return int(typed), nil
+	case int:
+		return typed, nil
+	default:
+		return 0, fmt.Errorf("unsupported integer value type %T", value)
+	}
 }
 
 func mapNodeToComment(node dbtype.Node) domain.Comment {

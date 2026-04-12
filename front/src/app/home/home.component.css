@@ -21,8 +21,7 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
-.blog-card,
-.create-tile {
+.blog-card {
   padding: 1.5rem;
   border-radius: 22px;
   background: white;
@@ -37,6 +36,30 @@
 .meta {
   color: #64748b;
   font-size: 0.92rem;
+}
+
+.likes-count {
+  margin: 0.35rem 0 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.likes-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.likes-row .likes-count {
+  margin: 0;
+}
+
+.like-button {
+  padding: 0.5rem 0.95rem;
 }
 
 .markdown-output {
@@ -106,30 +129,6 @@
   display: grid;
   gap: 0.7rem;
   margin-top: 1rem;
-}
-
-.create-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  border: 1px dashed #93c5fd;
-  cursor: pointer;
-  min-height: 220px;
-}
-
-.plus {
-  font-size: 4rem;
-  line-height: 1;
-  font-weight: 700;
-  color: #2563eb;
-  margin-top: -0.2rem;
-}
-
-.create-tile span:last-child {
-  font-size: 0.95rem;
-  color: #334155;
 }
 
 .error {

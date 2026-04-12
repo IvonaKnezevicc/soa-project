@@ -26,7 +26,9 @@ type BlogPostService interface {
 		postID string,
 		request dto.CreateCommentRequest,
 	) (*dto.CommentResponse, error)
-	GetAll(ctx context.Context) ([]dto.BlogPostResponse, error)
+	LikePost(ctx context.Context, identity auth.Identity, postID string) error
+	UnlikePost(ctx context.Context, identity auth.Identity, postID string) error
+	GetAll(ctx context.Context, identity auth.Identity) ([]dto.BlogPostResponse, error)
 }
 
 type blogPostService struct {
@@ -93,7 +95,7 @@ func (s *blogPostService) Create(
 	}, nil
 }
 
-func (s *blogPostService) GetAll(ctx context.Context) ([]dto.BlogPostResponse, error) {
+func (s *blogPostService) GetAll(ctx context.Context, identity auth.Identity) ([]dto.BlogPostResponse, error) {
 	posts, err := s.blogPostRepository.FindAll(ctx)
 	if err != nil {
 		return nil, err
@@ -109,6 +111,16 @@ func (s *blogPostService) GetAll(ctx context.Context) ([]dto.BlogPostResponse, e
 		return nil, err
 	}
 
+	likeCountsByPostID, err := s.blogPostRepository.FindLikeCountsByPostIDs(ctx, postIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	likedPostIDsByUser, err := s.blogPostRepository.FindLikedPostIDsByUser(ctx, postIDs, identity.UserID)
+	if err != nil {
+		return nil, err
+	}
+
 	response := make([]dto.BlogPostResponse, 0, len(posts))
 	for _, post := range posts {
 		response = append(response, dto.BlogPostResponse{
@@ -120,6 +132,8 @@ func (s *blogPostService) GetAll(ctx context.Context) ([]dto.BlogPostResponse, e
 			CreatedAt:           post.CreatedAt.Format(time.RFC3339),
 			AuthorUsername:      post.AuthorUsername,
 			Comments:            mapCommentsToResponse(commentsByPostID[post.ID]),
+			LikeCount:           likeCountsByPostID[post.ID],
+			LikedByCurrentUser:  likedPostIDsByUser[post.ID],
 		})
 	}
 
@@ -181,6 +195,47 @@ func (s *blogPostService) CreateComment(
 		AuthorEmail:    comment.AuthorEmail,
 		AuthorRole:     comment.AuthorRole,
 	}, nil
+}
+
+func (s *blogPostService) LikePost(ctx context.Context, identity auth.Identity, postID string) error {
+	postID = strings.TrimSpace(postID)
+	if postID == "" {
+		return fmt.Errorf("%w: postId is required", apperror.ErrValidation)
+	}
+
+	post, err := s.blogPostRepository.FindByID(ctx, postID)
+	if err != nil {
+		return err
+	}
+	if post == nil {
+		return fmt.Errorf("%w: blog post not found", apperror.ErrValidation)
+	}
+
+	return s.blogPostRepository.LikePost(
+		ctx,
+		postID,
+		identity.UserID,
+		identity.Username,
+		identity.Email,
+		identity.Role,
+	)
+}
+
+func (s *blogPostService) UnlikePost(ctx context.Context, identity auth.Identity, postID string) error {
+	postID = strings.TrimSpace(postID)
+	if postID == "" {
+		return fmt.Errorf("%w: postId is required", apperror.ErrValidation)
+	}
+
+	post, err := s.blogPostRepository.FindByID(ctx, postID)
+	if err != nil {
+		return err
+	}
+	if post == nil {
+		return fmt.Errorf("%w: blog post not found", apperror.ErrValidation)
+	}
+
+	return s.blogPostRepository.UnlikePost(ctx, postID, identity.UserID)
 }
 
 func markdownToHTML(markdown string) (string, error) {

@@ -12,11 +12,6 @@
   <p *ngIf="isLoading">Loading blogs...</p>
 
   <div class="blog-grid" *ngIf="!isLoading">
-    <button type="button" class="create-tile" (click)="openCreate()">
-      <span class="plus">+</span>
-      <span>Create new blog</span>
-    </button>
-
     <article class="blog-card" *ngFor="let post of posts">
       <h3>{{ post.title }}</h3>
       <p class="meta">
@@ -27,6 +22,19 @@
       <div class="images" *ngIf="post.imageUrls.length > 0">
         <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Blog image" />
       </div>
+
+      <div class="likes-row">
+        <p class="likes-count">{{ post.likeCount }} like(s)</p>
+        <button
+          type="button"
+          class="like-button"
+          [disabled]="likeSubmitting[post.id]"
+          (click)="toggleLike(post.id, post.likedByCurrentUser)"
+        >
+          {{ likeSubmitting[post.id] ? 'Saving...' : (post.likedByCurrentUser ? 'Unlike' : 'Like') }}
+        </button>
+      </div>
+      <p class="error" *ngIf="likeErrorMessages[post.id]">{{ likeErrorMessages[post.id] }}</p>
 
       <div class="comments-section">
         <h4>Comments</h4>

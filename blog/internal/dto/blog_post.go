@@ -15,6 +15,8 @@ type BlogPostResponse struct {
 	CreatedAt           string   `json:"createdAt"`
 	AuthorUsername      string   `json:"authorUsername"`
 	Comments            []CommentResponse `json:"comments"`
+	LikeCount           int      `json:"likeCount"`
+	LikedByCurrentUser  bool     `json:"likedByCurrentUser"`
 }
 
 type CreateCommentRequest struct {

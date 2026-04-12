@@ -33,4 +33,12 @@ export class BlogService {
   createComment(postId: string, payload: CreateCommentRequest): Observable<CommentResponse> {
     return this.http.post<CommentResponse>(`${this.baseUrl}/api/blog/posts/${postId}/comments`, payload);
   }
+
+  likePost(postId: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/api/blog/posts/${postId}/like`, {});
+  }
+
+  unlikePost(postId: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.baseUrl}/api/blog/posts/${postId}/like`);
+  }
 }
