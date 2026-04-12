@@ -31,7 +31,7 @@
           [disabled]="likeSubmitting[post.id]"
           (click)="toggleLike(post.id, post.likedByCurrentUser)"
         >
-          {{ likeSubmitting[post.id] ? 'Saving...' : (post.likedByCurrentUser ? 'Unlike' : 'Like') }}
+          {{ post.likedByCurrentUser ? 'Unlike' : 'Like' }}
         </button>
       </div>
       <p class="error" *ngIf="likeErrorMessages[post.id]">{{ likeErrorMessages[post.id] }}</p>

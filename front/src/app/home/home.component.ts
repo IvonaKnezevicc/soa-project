@@ -168,12 +168,30 @@ export class HomeComponent implements OnInit {
     request$.subscribe({
       next: () => {
         this.likeSubmitting[postId] = false;
-        this.loadPosts();
+        this.updateLikeState(postId, likedByCurrentUser);
       },
       error: (error) => {
         this.likeErrorMessages[postId] = error?.error?.message ?? 'Failed to update like.';
         this.likeSubmitting[postId] = false;
       }
+    });
+  }
+
+  private updateLikeState(postId: string, likedByCurrentUser: boolean): void {
+    this.posts = this.posts.map((post) => {
+      if (post.id !== postId) {
+        return post;
+      }
+
+      const nextLikeCount = likedByCurrentUser
+        ? Math.max(0, post.likeCount - 1)
+        : post.likeCount + 1;
+
+      return {
+        ...post,
+        likeCount: nextLikeCount,
+        likedByCurrentUser: !likedByCurrentUser
+      };
     });
   }
 
