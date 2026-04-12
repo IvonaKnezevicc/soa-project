@@ -7,6 +7,7 @@ import { BlogPostResponse } from '../blog/blog.model';
 import { BlogService } from '../blog/blog.service';
 import { User } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
+import { HomeActionsService } from '../services/home-actions.service';
 
 @Component({
   selector: 'app-home',
@@ -18,6 +19,11 @@ export class HomeComponent implements OnInit {
   posts: BlogPostView[] = [];
   selectedImages: string[] = [];
   selectedImageNames: string[] = [];
+  commentTexts: Record<string, string> = {};
+  commentSubmitting: Record<string, boolean> = {};
+  commentErrorMessages: Record<string, string> = {};
+  likeSubmitting: Record<string, boolean> = {};
+  likeErrorMessages: Record<string, string> = {};
   isAdmin = false;
   isLoading = false;
   isSubmitting = false;
@@ -34,12 +40,19 @@ export class HomeComponent implements OnInit {
     private readonly blogService: BlogService,
     private readonly formBuilder: NonNullableFormBuilder,
     private readonly sanitizer: DomSanitizer,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly homeActionsService: HomeActionsService
   ) {
     this.currentUser$ = this.authService.currentUser$;
   }
 
   ngOnInit(): void {
+    this.homeActionsService.openCreateBlog$.subscribe(() => {
+      if (!this.isAdmin) {
+        this.openCreate();
+      }
+    });
+
     this.currentUser$.subscribe((user) => {
       this.isAdmin = user?.role === 'admin';
       if (!this.isAdmin) {
@@ -60,6 +73,10 @@ export class HomeComponent implements OnInit {
           ...post,
           renderedDescription: this.sanitizer.bypassSecurityTrustHtml(post.descriptionHtml)
         }));
+        this.commentTexts = this.posts.reduce<Record<string, string>>((accumulator, post) => {
+          accumulator[post.id] = this.commentTexts[post.id] ?? '';
+          return accumulator;
+        }, {});
         this.isLoading = false;
       },
       error: () => {
@@ -110,6 +127,71 @@ export class HomeComponent implements OnInit {
         this.createErrorMessage = error?.error?.message ?? 'Failed to create blog post.';
         this.isSubmitting = false;
       }
+    });
+  }
+
+  updateCommentText(postId: string, value: string): void {
+    this.commentTexts[postId] = value;
+  }
+
+  submitComment(postId: string): void {
+    const text = (this.commentTexts[postId] ?? '').trim();
+    this.commentErrorMessages[postId] = '';
+
+    if (!text) {
+      this.commentErrorMessages[postId] = 'Comment text is required.';
+      return;
+    }
+
+    this.commentSubmitting[postId] = true;
+    this.blogService.createComment(postId, { text }).subscribe({
+      next: () => {
+        this.commentTexts[postId] = '';
+        this.commentSubmitting[postId] = false;
+        this.loadPosts();
+      },
+      error: (error) => {
+        this.commentErrorMessages[postId] = error?.error?.message ?? 'Failed to create comment.';
+        this.commentSubmitting[postId] = false;
+      }
+    });
+  }
+
+  toggleLike(postId: string, likedByCurrentUser: boolean): void {
+    this.likeErrorMessages[postId] = '';
+    this.likeSubmitting[postId] = true;
+
+    const request$ = likedByCurrentUser
+      ? this.blogService.unlikePost(postId)
+      : this.blogService.likePost(postId);
+
+    request$.subscribe({
+      next: () => {
+        this.likeSubmitting[postId] = false;
+        this.updateLikeState(postId, likedByCurrentUser);
+      },
+      error: (error) => {
+        this.likeErrorMessages[postId] = error?.error?.message ?? 'Failed to update like.';
+        this.likeSubmitting[postId] = false;
+      }
+    });
+  }
+
+  private updateLikeState(postId: string, likedByCurrentUser: boolean): void {
+    this.posts = this.posts.map((post) => {
+      if (post.id !== postId) {
+        return post;
+      }
+
+      const nextLikeCount = likedByCurrentUser
+        ? Math.max(0, post.likeCount - 1)
+        : post.likeCount + 1;
+
+      return {
+        ...post,
+        likeCount: nextLikeCount,
+        likedByCurrentUser: !likedByCurrentUser
+      };
     });
   }
 

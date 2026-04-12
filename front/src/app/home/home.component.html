@@ -12,11 +12,6 @@
   <p *ngIf="isLoading">Loading blogs...</p>
 
   <div class="blog-grid" *ngIf="!isLoading">
-    <button type="button" class="create-tile" (click)="openCreate()">
-      <span class="plus">+</span>
-      <span>Create new blog</span>
-    </button>
-
     <article class="blog-card" *ngFor="let post of posts">
       <h3>{{ post.title }}</h3>
       <p class="meta">
@@ -26,6 +21,50 @@
 
       <div class="images" *ngIf="post.imageUrls.length > 0">
         <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Blog image" />
+      </div>
+
+      <div class="likes-row">
+        <p class="likes-count">{{ post.likeCount }} like(s)</p>
+        <button
+          type="button"
+          class="like-button"
+          [disabled]="likeSubmitting[post.id]"
+          (click)="toggleLike(post.id, post.likedByCurrentUser)"
+        >
+          {{ post.likedByCurrentUser ? 'Unlike' : 'Like' }}
+        </button>
+      </div>
+      <p class="error" *ngIf="likeErrorMessages[post.id]">{{ likeErrorMessages[post.id] }}</p>
+
+      <div class="comments-section">
+        <h4>Comments</h4>
+
+        <p class="empty-comments" *ngIf="post.comments.length === 0">No comments yet.</p>
+
+        <div class="comment-card" *ngFor="let comment of post.comments">
+          <p class="comment-meta">
+            {{ comment.authorUsername }} | {{ comment.createdAt | date:'medium' }}
+          </p>
+          <p class="comment-updated">Last updated: {{ comment.updatedAt | date:'medium' }}</p>
+          <p class="comment-text">{{ comment.text }}</p>
+        </div>
+
+        <div class="comment-form">
+          <label [for]="'comment-' + post.id">Add comment</label>
+          <textarea
+            [id]="'comment-' + post.id"
+            rows="3"
+            [value]="commentTexts[post.id] || ''"
+            (input)="updateCommentText(post.id, $any($event.target).value)"
+            placeholder="Write your comment"
+          ></textarea>
+
+          <p class="error" *ngIf="commentErrorMessages[post.id]">{{ commentErrorMessages[post.id] }}</p>
+
+          <button type="button" [disabled]="commentSubmitting[post.id]" (click)="submitComment(post.id)">
+            {{ commentSubmitting[post.id] ? 'Posting...' : 'Post comment' }}
+          </button>
+        </div>
       </div>
     </article>
   </div>
