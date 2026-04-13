@@ -14,7 +14,7 @@ import {
   providedIn: 'root'
 })
 export class BlogService {
-  private readonly baseUrl = 'http://localhost:8081';
+  private readonly baseUrl = '';
 
   constructor(private readonly http: HttpClient) {}
 
