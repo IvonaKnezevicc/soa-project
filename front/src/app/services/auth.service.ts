@@ -16,7 +16,7 @@ import { TokenService } from './token.service';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly baseUrl = 'http://localhost:8080/api/stakeholders/users';
+  private readonly baseUrl = '/api/stakeholders/users';
   private readonly currentUserSubject = new BehaviorSubject<User | null>(null);
 
   readonly currentUser$ = this.currentUserSubject.asObservable();

@@ -10,7 +10,7 @@ import { UserStatusFilter } from '../models/user-status-filter.model';
   providedIn: 'root'
 })
 export class AdminUsersService {
-  private readonly baseUrl = 'http://localhost:8080/api/stakeholders/users';
+  private readonly baseUrl = '/api/stakeholders/users';
 
   constructor(private readonly http: HttpClient) {}
 
