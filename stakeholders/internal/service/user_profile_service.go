@@ -13,6 +13,7 @@ import (
 type UserProfileService interface {
 	GetProfile(ctx context.Context, username string) (*dto.UserProfileResponse, error)
 	UpdateProfile(ctx context.Context, username string, request dto.UpdateUserProfileRequest) (*dto.UserProfileResponse, error)
+	ExistsByUsername(ctx context.Context, username string) (bool, error)
 }
 
 type userProfileService struct {
@@ -109,4 +110,18 @@ func (s *userProfileService) UpdateProfile(
 		Biography:    user.Biography,
 		Motto:        user.Motto,
 	}, nil
+}
+
+func (s *userProfileService) ExistsByUsername(ctx context.Context, username string) (bool, error) {
+	username = strings.TrimSpace(username)
+	if username == "" {
+		return false, fmt.Errorf("%w: username is required", apperror.ErrValidation)
+	}
+
+	user, err := s.userRepository.FindByUsername(ctx, username)
+	if err != nil {
+		return false, err
+	}
+
+	return user != nil, nil
 }

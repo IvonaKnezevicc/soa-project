@@ -36,7 +36,8 @@ func main() {
 	}
 
 	jwtService := service.NewJWTService(cfg)
-	blogPostService := service.NewBlogPostService(blogPostRepository)
+	followerClient := service.NewFollowerClient(cfg.FollowerServiceURL)
+	blogPostService := service.NewBlogPostService(blogPostRepository, followerClient)
 	startupController := controller.NewStartupController()
 	blogPostController := controller.NewBlogPostController(blogPostService)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)

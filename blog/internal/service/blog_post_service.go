@@ -33,10 +33,14 @@ type BlogPostService interface {
 
 type blogPostService struct {
 	blogPostRepository repository.BlogPostRepository
+	followerClient     FollowerClient
 }
 
-func NewBlogPostService(blogPostRepository repository.BlogPostRepository) BlogPostService {
-	return &blogPostService{blogPostRepository: blogPostRepository}
+func NewBlogPostService(blogPostRepository repository.BlogPostRepository, followerClient FollowerClient) BlogPostService {
+	return &blogPostService{
+		blogPostRepository: blogPostRepository,
+		followerClient:     followerClient,
+	}
 }
 
 func (s *blogPostService) Create(
@@ -101,8 +105,16 @@ func (s *blogPostService) GetAll(ctx context.Context, identity auth.Identity) ([
 		return nil, err
 	}
 
+	allowedAuthors, err := s.followerClient.AllowedAuthors(ctx, identity.Username)
+	if err != nil {
+		return nil, err
+	}
+
 	postIDs := make([]string, 0, len(posts))
 	for _, post := range posts {
+		if post.AuthorUsername != identity.Username && !allowedAuthors[post.AuthorUsername] {
+			continue
+		}
 		postIDs = append(postIDs, post.ID)
 	}
 
@@ -123,6 +135,10 @@ func (s *blogPostService) GetAll(ctx context.Context, identity auth.Identity) ([
 
 	response := make([]dto.BlogPostResponse, 0, len(posts))
 	for _, post := range posts {
+		if post.AuthorUsername != identity.Username && !allowedAuthors[post.AuthorUsername] {
+			continue
+		}
+
 		response = append(response, dto.BlogPostResponse{
 			ID:                  post.ID,
 			Title:               post.Title,
@@ -165,6 +181,15 @@ func (s *blogPostService) CreateComment(
 	}
 	if post == nil {
 		return nil, fmt.Errorf("%w: blog post not found", apperror.ErrValidation)
+	}
+	if post.AuthorUsername != identity.Username {
+		canComment, err := s.followerClient.CanComment(ctx, identity.Username, post.AuthorUsername)
+		if err != nil {
+			return nil, err
+		}
+		if !canComment {
+			return nil, fmt.Errorf("%w: follow this author before commenting", apperror.ErrValidation)
+		}
 	}
 
 	now := time.Now().UTC()

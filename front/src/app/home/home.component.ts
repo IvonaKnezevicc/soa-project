@@ -7,6 +7,7 @@ import { BlogPostResponse } from '../blog/blog.model';
 import { BlogService } from '../blog/blog.service';
 import { User } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
+import { FollowerService } from '../services/follower.service';
 import { HomeActionsService } from '../services/home-actions.service';
 
 @Component({
@@ -24,6 +25,9 @@ export class HomeComponent implements OnInit {
   commentErrorMessages: Record<string, string> = {};
   likeSubmitting: Record<string, boolean> = {};
   likeErrorMessages: Record<string, string> = {};
+  followingUsernames = new Set<string>();
+  followSubmitting = false;
+  currentUsername = '';
   isAdmin = false;
   isLoading = false;
   isSubmitting = false;
@@ -41,6 +45,7 @@ export class HomeComponent implements OnInit {
     private readonly formBuilder: NonNullableFormBuilder,
     private readonly sanitizer: DomSanitizer,
     private readonly authService: AuthService,
+    private readonly followerService: FollowerService,
     private readonly homeActionsService: HomeActionsService
   ) {
     this.currentUser$ = this.authService.currentUser$;
@@ -55,12 +60,38 @@ export class HomeComponent implements OnInit {
 
     this.currentUser$.subscribe((user) => {
       this.isAdmin = user?.role === 'admin';
+      this.currentUsername = user?.username ?? '';
       if (!this.isAdmin) {
+        this.loadFollowing();
         this.loadPosts();
       } else {
         this.posts = [];
+        this.followingUsernames = new Set<string>();
       }
     });
+  }
+
+  follow(username: string): void {
+    const targetUsername = username.trim();
+    if (!targetUsername) {
+      return;
+    }
+
+    this.followSubmitting = true;
+    this.followerService.follow(targetUsername).subscribe({
+      next: () => {
+        this.followSubmitting = false;
+        this.loadFollowing();
+        this.loadPosts();
+      },
+      error: () => {
+        this.followSubmitting = false;
+      }
+    });
+  }
+
+  isFollowing(username: string): boolean {
+    return this.followingUsernames.has(username);
   }
 
   loadPosts(): void {
@@ -192,6 +223,17 @@ export class HomeComponent implements OnInit {
         likeCount: nextLikeCount,
         likedByCurrentUser: !likedByCurrentUser
       };
+    });
+  }
+
+  private loadFollowing(): void {
+    this.followerService.getFollowing().subscribe({
+      next: (usernames) => {
+        this.followingUsernames = new Set<string>(usernames);
+      },
+      error: () => {
+        this.followingUsernames = new Set<string>();
+      }
     });
   }
 

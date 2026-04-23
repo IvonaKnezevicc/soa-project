@@ -20,8 +20,8 @@
 .users-count {
   padding: 0.45rem 0.8rem;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #f7e8ee;
+  color: #6f1833;
   font-weight: 700;
 }
 
@@ -42,16 +42,16 @@
 }
 
 .users-tabs button.active {
-  border-color: #1d4ed8;
-  background: #dbeafe;
-  color: #1d4ed8;
+  border-color: #6f1833;
+  background: #f7e8ee;
+  color: #6f1833;
 }
 
 .users-table-wrapper {
   overflow-x: auto;
   border-radius: 20px;
   background: #ffffff;
-  border: 1px solid #dbe4ff;
+  border: 1px solid #e9c8d4;
   box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
 }
 
@@ -80,7 +80,7 @@
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
   background: #eff6ff;
-  color: #1d4ed8;
+  color: #6f1833;
   font-weight: 700;
   text-transform: capitalize;
 }
@@ -90,11 +90,11 @@
   padding: 1rem 1.25rem;
   border-radius: 16px;
   background: #ffffff;
-  border: 1px solid #dbe4ff;
+  border: 1px solid #e9c8d4;
 }
 
 .users-message.error {
-  color: #b91c1c;
+  color: #6f1833;
 }
 
 .users-message.success {
@@ -126,7 +126,7 @@
   border: 0;
   border-radius: 10px;
   padding: 0.55rem 0.9rem;
-  background: #b91c1c;
+  background: #6f1833;
   color: #ffffff;
   cursor: pointer;
   font-weight: 700;
@@ -143,3 +143,5 @@
     flex-direction: column;
   }
 }
+
+

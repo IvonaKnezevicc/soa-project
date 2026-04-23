@@ -6,6 +6,9 @@
   <ng-container *ngIf="!isAdmin">
   <div class="header-row">
     <h2>Blogs</h2>
+    <button type="button" class="header-create-button" (click)="openCreate()">
+      + Create new blog
+    </button>
   </div>
 
   <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
@@ -17,6 +20,15 @@
       <p class="meta">
         By {{ post.authorUsername }} | {{ post.createdAt | date:'medium' }}
       </p>
+      <button
+        *ngIf="post.authorUsername !== currentUsername && !isFollowing(post.authorUsername)"
+        type="button"
+        class="follow-author-button"
+        [disabled]="followSubmitting"
+        (click)="follow(post.authorUsername)"
+      >
+        Follow {{ post.authorUsername }}
+      </button>
       <div class="markdown-output" [innerHTML]="post.renderedDescription"></div>
 
       <div class="images" *ngIf="post.imageUrls.length > 0">
@@ -108,5 +120,6 @@
       </form>
     </div>
   </div>
+
   </ng-container>
 </section>

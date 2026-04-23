@@ -226,6 +226,35 @@ func (c *UserController) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
+func (c *UserController) CheckUserExists(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
+		return
+	}
+
+	if _, ok := auth.IdentityFromContext(r.Context()); !ok {
+		writeJSON(w, http.StatusUnauthorized, dto.ErrorResponse{Message: "authenticated user not found in context"})
+		return
+	}
+
+	username := r.URL.Query().Get("username")
+	exists, err := c.userProfileService.ExistsByUsername(r.Context(), username)
+	if err != nil {
+		switch {
+		case errors.Is(err, apperror.ErrValidation):
+			writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: err.Error()})
+		default:
+			writeJSON(w, http.StatusInternalServerError, dto.ErrorResponse{Message: "internal server error"})
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"username": username,
+		"exists":   exists,
+	})
+}
+
 func (c *UserController) UpdateMyProfile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})

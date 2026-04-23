@@ -1,0 +1,74 @@
+.find-users-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: none;
+  background: #fff;
+  border-radius: 22px;
+  border: 1px solid #e9c8d4;
+  padding: 1.5rem;
+  box-shadow: none;
+}
+
+.modal-card h3 {
+  margin-top: 0;
+}
+
+.follow-input-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.follow-input-row input {
+  flex: 1;
+}
+
+.recommendations {
+  margin-top: 0.85rem;
+}
+
+.recommendation-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.recommendation-chip {
+  padding: 0.5rem 0.85rem;
+}
+
+input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  background: #8b1e3f;
+  color: #fff;
+  padding: 0.7rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #6f1833;
+}
+
+.success {
+  color: #166534;
+}

@@ -1,6 +1,6 @@
 .app-shell {
   min-height: 100vh;
-  background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 45%, #ffffff 100%);
+  background: linear-gradient(180deg, #fbf2f6 0%, #f8fafc 45%, #ffffff 100%);
   color: #0f172a;
 }
 
@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 2rem;
-  border-bottom: 1px solid #dbe4ff;
+  border-bottom: 1px solid #e9c8d4;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
 }
@@ -34,18 +34,30 @@
   font-weight: 500;
 }
 
-.create-blog-button {
+.nav-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 0;
-  background: #2563eb;
+  background: #8b1e3f;
   color: #ffffff;
   padding: 0.6rem 0.95rem;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 700;
+  line-height: 1;
+}
+
+.nav-links a.nav-action-button {
+  color: #ffffff;
+}
+
+.nav-action-button.active {
+  background: #6f1833;
 }
 
 .nav-links a.active {
-  color: #2563eb;
+  color: #8b1e3f;
 }
 
 .user-pill {
@@ -54,19 +66,19 @@
   gap: 0.4rem;
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #f7e8ee;
+  color: #6f1833;
   font-size: 0.9rem;
   font-weight: 600;
 }
 
 .profile-button {
-  border: 1px solid #bfdbfe;
+  border: 1px solid #edd0dc;
   cursor: pointer;
 }
 
 .profile-button.active {
-  background: #bfdbfe;
+  background: #edd0dc;
 }
 
 .user-icon {
@@ -100,3 +112,5 @@
     padding: 1rem;
   }
 }
+
+

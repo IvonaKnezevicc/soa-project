@@ -6,7 +6,7 @@
   padding: 2rem;
   border-radius: 24px;
   background: #ffffff;
-  border: 1px solid #dbe4ff;
+  border: 1px solid #e9c8d4;
   box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
 }
 
@@ -39,7 +39,7 @@
   border: 0;
   border-radius: 12px;
   padding: 0.95rem 1rem;
-  background: linear-gradient(135deg, #2563eb 0%, #0f172a 100%);
+  background: #8b1e3f;
   color: white;
   font-size: 1rem;
   font-weight: 700;
@@ -56,5 +56,7 @@
 }
 
 .message.error {
-  color: #b91c1c;
+  color: #6f1833;
 }
+
+

@@ -9,15 +9,22 @@
       </ng-container>
 
       <ng-template #authenticatedLinks>
-        <a routerLink="/home" routerLinkActive="active">Home</a>
-        <button
-          *ngIf="(currentUser$ | async)?.role !== 'admin' && isHomeRoute"
-          type="button"
-          class="create-blog-button"
-          (click)="openCreateBlog()"
+        <a
+          *ngIf="(currentUser$ | async)"
+          routerLink="/home"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
         >
-          Create blog
-        </button>
+          Home
+        </a>
+        <a
+          *ngIf="(currentUser$ | async)?.role !== 'admin'"
+          routerLink="/find-users"
+          routerLinkActive="active"
+          class="nav-action-button"
+        >
+          Find users
+        </a>
         <button
           *ngIf="(currentUser$ | async)?.role !== 'admin'"
           type="button"
