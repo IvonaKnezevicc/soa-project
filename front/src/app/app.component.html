@@ -1,25 +1,23 @@
 <div class="app-shell">
   <header class="topbar">
-    <a class="brand" [routerLink]="(currentUser$ | async) ? '/home' : '/login'">TravelMania</a>
+    <div class="topbar-left">
+      <button *ngIf="currentUser$ | async" type="button" class="menu-toggle" (click)="toggleSidebar()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <a class="brand" [routerLink]="(currentUser$ | async) ? '/home' : '/login'">TravelMania</a>
+    </div>
 
     <nav class="nav-links">
-      <ng-container *ngIf="!(currentUser$ | async); else authenticatedLinks">
+      <ng-container *ngIf="!(currentUser$ | async); else authenticatedTopbarLinks">
         <a routerLink="/login" routerLinkActive="active">Login</a>
         <a routerLink="/register" routerLinkActive="active">Register</a>
       </ng-container>
 
-      <ng-template #authenticatedLinks>
-        <a routerLink="/home" routerLinkActive="active">Home</a>
+      <ng-template #authenticatedTopbarLinks>
+        <ng-container *ngIf="currentUser$ | async as currentUser">
         <button
-          *ngIf="(currentUser$ | async)?.role !== 'admin' && isHomeRoute"
-          type="button"
-          class="create-blog-button"
-          (click)="openCreateBlog()"
-        >
-          Create blog
-        </button>
-        <button
-          *ngIf="(currentUser$ | async)?.role !== 'admin'"
           type="button"
           class="user-pill profile-button"
           routerLink="/profile"
@@ -28,14 +26,30 @@
           <svg class="user-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"></path>
           </svg>
-          <span>{{ (currentUser$ | async)?.username }}</span>
+          <span>{{ currentUser.username }}</span>
         </button>
         <button type="button" class="logout-button" (click)="logout()">Logout</button>
+        </ng-container>
       </ng-template>
     </nav>
   </header>
 
-  <main class="content">
-    <router-outlet></router-outlet>
-  </main>
+  <ng-container *ngIf="currentUser$ | async as currentUser; else guestLayout">
+    <div class="app-layout" [class.sidebar-collapsed]="!sidebarOpen">
+      <aside class="sidebar">
+        <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+        <a *ngIf="currentUser.role !== 'admin'" routerLink="/find-users" routerLinkActive="active">Find users</a>
+      </aside>
+
+      <main class="content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </ng-container>
+
+  <ng-template #guestLayout>
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </ng-template>
 </div>

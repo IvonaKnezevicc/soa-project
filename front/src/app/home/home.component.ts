@@ -3,10 +3,11 @@ import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Observable } from 'rxjs';
 
-import { BlogPostResponse } from '../blog/blog.model';
+import { BlogPostResponse, CommentResponse } from '../blog/blog.model';
 import { BlogService } from '../blog/blog.service';
 import { User } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
+import { FollowerService } from '../services/follower.service';
 import { HomeActionsService } from '../services/home-actions.service';
 
 @Component({
@@ -24,6 +25,9 @@ export class HomeComponent implements OnInit {
   commentErrorMessages: Record<string, string> = {};
   likeSubmitting: Record<string, boolean> = {};
   likeErrorMessages: Record<string, string> = {};
+  followingUsernames = new Set<string>();
+  followSubmitting = false;
+  currentUsername = '';
   isAdmin = false;
   isLoading = false;
   isSubmitting = false;
@@ -41,6 +45,7 @@ export class HomeComponent implements OnInit {
     private readonly formBuilder: NonNullableFormBuilder,
     private readonly sanitizer: DomSanitizer,
     private readonly authService: AuthService,
+    private readonly followerService: FollowerService,
     private readonly homeActionsService: HomeActionsService
   ) {
     this.currentUser$ = this.authService.currentUser$;
@@ -55,12 +60,38 @@ export class HomeComponent implements OnInit {
 
     this.currentUser$.subscribe((user) => {
       this.isAdmin = user?.role === 'admin';
+      this.currentUsername = user?.username ?? '';
       if (!this.isAdmin) {
+        this.loadFollowing();
         this.loadPosts();
       } else {
         this.posts = [];
+        this.followingUsernames = new Set<string>();
       }
     });
+  }
+
+  follow(username: string): void {
+    const targetUsername = username.trim();
+    if (!targetUsername) {
+      return;
+    }
+
+    this.followSubmitting = true;
+    this.followerService.follow(targetUsername).subscribe({
+      next: () => {
+        this.followSubmitting = false;
+        this.loadFollowing();
+        this.loadPosts();
+      },
+      error: () => {
+        this.followSubmitting = false;
+      }
+    });
+  }
+
+  isFollowing(username: string): boolean {
+    return this.followingUsernames.has(username);
   }
 
   loadPosts(): void {
@@ -145,10 +176,10 @@ export class HomeComponent implements OnInit {
 
     this.commentSubmitting[postId] = true;
     this.blogService.createComment(postId, { text }).subscribe({
-      next: () => {
+      next: (comment) => {
         this.commentTexts[postId] = '';
         this.commentSubmitting[postId] = false;
-        this.loadPosts();
+        this.addCommentToPost(postId, comment);
       },
       error: (error) => {
         this.commentErrorMessages[postId] = error?.error?.message ?? 'Failed to create comment.';
@@ -192,6 +223,30 @@ export class HomeComponent implements OnInit {
         likeCount: nextLikeCount,
         likedByCurrentUser: !likedByCurrentUser
       };
+    });
+  }
+
+  private addCommentToPost(postId: string, comment: CommentResponse): void {
+    this.posts = this.posts.map((post) => {
+      if (post.id !== postId) {
+        return post;
+      }
+
+      return {
+        ...post,
+        comments: [...post.comments, comment]
+      };
+    });
+  }
+
+  private loadFollowing(): void {
+    this.followerService.getFollowing().subscribe({
+      next: (usernames) => {
+        this.followingUsernames = new Set<string>(usernames);
+      },
+      error: () => {
+        this.followingUsernames = new Set<string>();
+      }
     });
   }
 

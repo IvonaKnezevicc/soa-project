@@ -1,18 +1,22 @@
 .hero {
   display: grid;
   gap: 1.5rem;
-  max-width: 1100px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
 .header-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .header-row h2 {
   margin: 0;
+}
+
+.header-create-button {
+  margin-left: auto;
+  padding: 0.62rem 1.05rem;
 }
 
 .blog-grid {
@@ -25,7 +29,7 @@
   padding: 1.5rem;
   border-radius: 22px;
   background: white;
-  border: 1px solid #dbe4ff;
+  border: 1px solid #e9c8d4;
   box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
 }
 
@@ -36,13 +40,19 @@
 .meta {
   color: #64748b;
   font-size: 0.92rem;
+  margin-bottom: 0.65rem;
+}
+
+.follow-author-button {
+  margin-bottom: 0.8rem;
+  padding: 0.45rem 0.8rem;
 }
 
 .likes-count {
   margin: 0.35rem 0 0.85rem;
   font-size: 0.92rem;
   font-weight: 600;
-  color: #2563eb;
+  color: #8b1e3f;
 }
 
 .likes-row {
@@ -99,7 +109,7 @@
 }
 
 .comment-card {
-  border: 1px solid #dbe4ff;
+  border: 1px solid #e9c8d4;
   border-radius: 14px;
   padding: 0.85rem;
   background: #f8fbff;
@@ -132,7 +142,7 @@
 }
 
 .error {
-  color: #b91c1c;
+  color: #6f1833;
 }
 
 .selected-images {
@@ -184,7 +194,7 @@ textarea {
 button {
   border: none;
   border-radius: 999px;
-  background: #2563eb;
+  background: #8b1e3f;
   color: #fff;
   padding: 0.7rem 1.2rem;
   font-weight: 700;
@@ -206,3 +216,5 @@ button:disabled {
   background: #e2e8f0;
   color: #0f172a;
 }
+
+

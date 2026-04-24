@@ -1,0 +1,47 @@
+<section class="find-users-page">
+  <div class="modal-card">
+    <h3>Find users</h3>
+
+    <div class="follow-input-row">
+      <input
+        type="text"
+        [value]="followInputUsername"
+        (input)="followInputUsername = $any($event.target).value"
+        placeholder="Enter username"
+      />
+      <button type="button" [disabled]="followSubmitting" (click)="follow(followInputUsername)">
+        {{ followSubmitting ? 'Following...' : 'Follow' }}
+      </button>
+    </div>
+    <p class="error" *ngIf="followErrorMessage">{{ followErrorMessage }}</p>
+    <p class="message success" *ngIf="followSuccessMessage">{{ followSuccessMessage }}</p>
+
+    <div class="recommendations">
+      <h4>Recommended profiles:</h4>
+      <p *ngIf="recommendationUsernames.length === 0">No recommendations yet.</p>
+      <div class="recommendation-list" *ngIf="recommendationUsernames.length > 0">
+        <button
+          type="button"
+          class="recommendation-chip"
+          *ngFor="let item of recommendationUsernames"
+          [disabled]="followSubmitting || isFollowing(item.username)"
+          (click)="followRecommendation(item.username)"
+        >
+          {{ item.username }}<span *ngIf="item.mutualConnections > 0"> ({{ item.mutualConnections }} mutual)</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="confirm-backdrop" *ngIf="followConfirmUsername">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="follow-confirm-title">
+    <h4 id="follow-confirm-title">Follow user</h4>
+    <p>Do you want to follow {{ followConfirmUsername }}?</p>
+    <div class="confirm-actions">
+      <button type="button" class="secondary-button" (click)="cancelFollowConfirmation()">Cancel</button>
+      <button type="button" (click)="confirmFollowFromDialog()">Follow</button>
+    </div>
+  </div>
+</div>

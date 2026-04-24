@@ -1,0 +1,118 @@
+.find-users-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: none;
+  background: #fff;
+  border-radius: 22px;
+  border: 1px solid #e9c8d4;
+  padding: 1.5rem;
+  box-shadow: none;
+}
+
+.modal-card h3 {
+  margin-top: 0;
+}
+
+.follow-input-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.follow-input-row input {
+  flex: 1;
+}
+
+.recommendations {
+  margin-top: 1.45rem;
+}
+
+.recommendations h4 {
+  margin: 0 0 1.2rem;
+}
+
+.recommendation-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0;
+}
+
+.recommendation-chip {
+  padding: 0.5rem 0.85rem;
+}
+
+input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  background: #8b1e3f;
+  color: #fff;
+  padding: 0.7rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #6f1833;
+}
+
+.success {
+  color: #166534;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+
+.confirm-dialog {
+  width: min(420px, 92vw);
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e9c8d4;
+  padding: 1.1rem;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.28);
+}
+
+.confirm-dialog h4 {
+  margin: 0 0 0.45rem;
+}
+
+.confirm-dialog p {
+  margin: 0 0 1rem;
+  color: #334155;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.secondary-button {
+  background: #e2e8f0;
+  color: #0f172a;
+}

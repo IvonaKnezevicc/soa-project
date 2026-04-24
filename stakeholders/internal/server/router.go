@@ -18,6 +18,7 @@ func NewRouter(
 	mux.HandleFunc("/api/stakeholders/users/register", userController.RegisterUser)
 	mux.HandleFunc("/api/stakeholders/users/login", userController.LoginUser)
 	mux.HandleFunc("/api/stakeholders/users/me", authMiddleware.RequireAuth(userController.GetAuthenticatedUser))
+	mux.HandleFunc("/api/stakeholders/users/exists", authMiddleware.RequireAuth(userController.CheckUserExists))
 	mux.HandleFunc("/api/stakeholders/users/profile", authMiddleware.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:

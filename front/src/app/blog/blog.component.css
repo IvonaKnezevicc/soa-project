@@ -7,7 +7,7 @@
   padding: 1.5rem;
   border-radius: 22px;
   background: white;
-  border: 1px solid #dbe4ff;
+  border: 1px solid #e9c8d4;
   box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
 }
 
@@ -16,7 +16,7 @@
 }
 
 .error {
-  color: #b91c1c;
+  color: #6f1833;
 }
 
 .success {
@@ -46,7 +46,7 @@ textarea {
 button {
   border: none;
   border-radius: 999px;
-  background: #2563eb;
+  background: #8b1e3f;
   color: #fff;
   padding: 0.7rem 1.2rem;
   font-weight: 700;
@@ -74,3 +74,5 @@ button:disabled {
   padding: 0.8rem;
   background: #f8fafc;
 }
+
+

@@ -9,6 +9,7 @@ import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { HomeComponent } from './home/home.component';
+import { FindUsersComponent } from './find-users/find-users.component';
 import { ProfileComponent } from './profile/profile.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 
@@ -19,6 +20,7 @@ import { AuthInterceptor } from './services/auth.interceptor';
     LoginComponent,
     RegisterComponent,
     HomeComponent,
+    FindUsersComponent,
     ProfileComponent
   ],
   imports: [

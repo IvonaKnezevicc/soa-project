@@ -9,7 +9,7 @@
   padding: 1.5rem;
   border-radius: 22px;
   background: white;
-  border: 1px solid #dbe4ff;
+  border: 1px solid #e9c8d4;
   box-shadow: 0 24px 60px rgba(37, 99, 235, 0.08);
   text-align: center;
 }
@@ -83,7 +83,7 @@ textarea {
 button {
   border: none;
   border-radius: 999px;
-  background: #2563eb;
+  background: #8b1e3f;
   color: #fff;
   padding: 0.7rem 1.2rem;
   font-weight: 700;
@@ -115,7 +115,7 @@ button:disabled {
 }
 
 .error-message {
-  color: #b91c1c;
+  color: #6f1833;
   margin: 0;
 }
 
@@ -165,3 +165,5 @@ form {
   background: #e2e8f0;
   color: #0f172a;
 }
+
+
