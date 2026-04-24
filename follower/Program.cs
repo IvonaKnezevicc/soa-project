@@ -69,6 +69,33 @@ app.MapPost("/api/followers/follows/{targetUsername}", async (HttpContext contex
         return Results.NotFound(new ErrorResponse($"user '{targetUsername}' does not exist"));
     }
 
+    await using (var readSession = neo4j.AsyncSession(config => config.WithDatabase(neo4jDatabase)))
+    {
+        var alreadyFollowing = await readSession.ExecuteReadAsync(async tx =>
+        {
+            var cursor = await tx.RunAsync(@"
+                MATCH (:User {username: $followerUsername})-[r:FOLLOWS]->(:User {username: $targetUsername})
+                RETURN count(r) > 0 AS alreadyFollowing",
+                new
+                {
+                    followerUsername = identity.Username,
+                    targetUsername
+                });
+
+            if (await cursor.FetchAsync())
+            {
+                return cursor.Current["alreadyFollowing"].As<bool>();
+            }
+
+            return false;
+        });
+
+        if (alreadyFollowing)
+        {
+            return Results.Conflict(new ErrorResponse($"you already follow '{targetUsername}'"));
+        }
+    }
+
     await using var session = neo4j.AsyncSession(config => config.WithDatabase(neo4jDatabase));
     await session.ExecuteWriteAsync(async tx =>
     {

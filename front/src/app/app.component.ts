@@ -11,6 +11,7 @@ import { AuthService } from './services/auth.service';
 })
 export class AppComponent {
   readonly currentUser$: Observable<User | null>;
+  sidebarOpen = true;
 
   constructor(private readonly authService: AuthService) {
     this.currentUser$ = this.authService.currentUser$;
@@ -18,5 +19,9 @@ export class AppComponent {
 
   logout(): void {
     this.authService.logout().subscribe();
+  }
+
+  toggleSidebar(): void {
+    this.sidebarOpen = !this.sidebarOpen;
   }
 }

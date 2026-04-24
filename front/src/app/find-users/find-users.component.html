@@ -17,7 +17,7 @@
     <p class="message success" *ngIf="followSuccessMessage">{{ followSuccessMessage }}</p>
 
     <div class="recommendations">
-      <h4>Recommended profiles</h4>
+      <h4>Recommended profiles:</h4>
       <p *ngIf="recommendationUsernames.length === 0">No recommendations yet.</p>
       <div class="recommendation-list" *ngIf="recommendationUsernames.length > 0">
         <button
@@ -34,3 +34,14 @@
 
   </div>
 </section>
+
+<div class="confirm-backdrop" *ngIf="followConfirmUsername">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="follow-confirm-title">
+    <h4 id="follow-confirm-title">Follow user</h4>
+    <p>Do you want to follow {{ followConfirmUsername }}?</p>
+    <div class="confirm-actions">
+      <button type="button" class="secondary-button" (click)="cancelFollowConfirmation()">Cancel</button>
+      <button type="button" (click)="confirmFollowFromDialog()">Follow</button>
+    </div>
+  </div>
+</div>

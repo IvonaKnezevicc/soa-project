@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FollowerService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ee781e6730b4e5e6c5fa849a778d9a9beb18da28")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bc59d9efa3376b53baf6cc625e374e0d8e684ee6")]
 [assembly: System.Reflection.AssemblyProductAttribute("FollowerService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FollowerService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

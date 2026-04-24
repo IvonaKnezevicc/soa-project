@@ -28,13 +28,18 @@
 }
 
 .recommendations {
-  margin-top: 0.85rem;
+  margin-top: 1.45rem;
+}
+
+.recommendations h4 {
+  margin: 0 0 1.2rem;
 }
 
 .recommendation-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  margin-top: 0;
 }
 
 .recommendation-chip {
@@ -71,4 +76,43 @@ button:disabled {
 
 .success {
   color: #166534;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+
+.confirm-dialog {
+  width: min(420px, 92vw);
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e9c8d4;
+  padding: 1.1rem;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.28);
+}
+
+.confirm-dialog h4 {
+  margin: 0 0 0.45rem;
+}
+
+.confirm-dialog p {
+  margin: 0 0 1rem;
+  color: #334155;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.secondary-button {
+  background: #e2e8f0;
+  color: #0f172a;
 }

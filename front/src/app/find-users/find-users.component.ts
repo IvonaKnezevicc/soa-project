@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { FollowerService } from '../services/follower.service';
@@ -13,13 +13,15 @@ interface RecommendationView {
   templateUrl: './find-users.component.html',
   styleUrls: ['./find-users.component.css']
 })
-export class FindUsersComponent implements OnInit {
+export class FindUsersComponent implements OnInit, OnDestroy {
   recommendationUsernames: RecommendationView[] = [];
   followingUsernames = new Set<string>();
   followInputUsername = '';
   followSubmitting = false;
   followErrorMessage = '';
   followSuccessMessage = '';
+  followConfirmUsername: string | null = null;
+  private followSuccessTimeoutId: number | null = null;
 
   constructor(
     private readonly followerService: FollowerService,
@@ -30,13 +32,23 @@ export class FindUsersComponent implements OnInit {
     this.loadFollowingAndRecommendations();
   }
 
+  ngOnDestroy(): void {
+    this.clearFollowSuccessTimeout();
+  }
+
   follow(username: string): void {
     const targetUsername = username.trim();
     this.followErrorMessage = '';
     this.followSuccessMessage = '';
+    this.clearFollowSuccessTimeout();
 
     if (!targetUsername) {
       this.followErrorMessage = 'Username is required.';
+      return;
+    }
+
+    if (this.isFollowing(targetUsername)) {
+      this.followErrorMessage = `You already follow ${targetUsername}.`;
       return;
     }
 
@@ -46,6 +58,11 @@ export class FindUsersComponent implements OnInit {
         this.followInputUsername = '';
         this.followSubmitting = false;
         this.followSuccessMessage = `You are now following ${targetUsername}.`;
+        this.followingUsernames.add(this.normalizeUsername(targetUsername));
+        this.followSuccessTimeoutId = window.setTimeout(() => {
+          this.followSuccessMessage = '';
+          this.followSuccessTimeoutId = null;
+        }, 2000);
         this.loadFollowingAndRecommendations();
       },
       error: (error) => {
@@ -61,16 +78,25 @@ export class FindUsersComponent implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm(`Do you want to follow ${targetUsername}?`);
-    if (!confirmed) {
+    this.followConfirmUsername = targetUsername;
+  }
+
+  cancelFollowConfirmation(): void {
+    this.followConfirmUsername = null;
+  }
+
+  confirmFollowFromDialog(): void {
+    if (!this.followConfirmUsername) {
       return;
     }
 
+    const targetUsername = this.followConfirmUsername;
+    this.followConfirmUsername = null;
     this.follow(targetUsername);
   }
 
   isFollowing(username: string): boolean {
-    return this.followingUsernames.has(username);
+    return this.followingUsernames.has(this.normalizeUsername(username));
   }
 
   close(): void {
@@ -80,7 +106,9 @@ export class FindUsersComponent implements OnInit {
   private loadFollowingAndRecommendations(): void {
     this.followerService.getFollowing().subscribe({
       next: (usernames) => {
-        this.followingUsernames = new Set<string>(usernames);
+        this.followingUsernames = new Set<string>(
+          usernames.map((username) => this.normalizeUsername(username))
+        );
       },
       error: () => {
         this.followingUsernames = new Set<string>();
@@ -95,5 +123,16 @@ export class FindUsersComponent implements OnInit {
         this.recommendationUsernames = [];
       }
     });
+  }
+
+  private clearFollowSuccessTimeout(): void {
+    if (this.followSuccessTimeoutId !== null) {
+      window.clearTimeout(this.followSuccessTimeoutId);
+      this.followSuccessTimeoutId = null;
+    }
+  }
+
+  private normalizeUsername(username: string): string {
+    return username.trim().toLowerCase();
   }
 }

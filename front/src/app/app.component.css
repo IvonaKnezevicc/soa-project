@@ -14,6 +14,34 @@
   backdrop-filter: blur(8px);
 }
 
+.topbar-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.menu-toggle {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #edd0dc;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.menu-toggle span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: #6f1833;
+  border-radius: 999px;
+}
+
 .brand {
   font-size: 1.1rem;
   font-weight: 700;
@@ -32,28 +60,6 @@
   color: #334155;
   text-decoration: none;
   font-weight: 500;
-}
-
-.nav-action-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  background: #8b1e3f;
-  color: #ffffff;
-  padding: 0.6rem 0.95rem;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.nav-links a.nav-action-button {
-  color: #ffffff;
-}
-
-.nav-action-button.active {
-  background: #6f1833;
 }
 
 .nav-links a.active {
@@ -97,6 +103,46 @@
   cursor: pointer;
 }
 
+.app-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 73px);
+  transition: grid-template-columns 0.2s ease;
+}
+
+.app-layout.sidebar-collapsed {
+  grid-template-columns: 0 1fr;
+}
+
+.sidebar {
+  border-right: 1px solid #e9c8d4;
+  padding: 1.25rem 1rem;
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.75);
+  overflow: hidden;
+}
+
+.sidebar a {
+  text-decoration: none;
+  color: #334155;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+
+.sidebar a.active {
+  background: #8b1e3f;
+  color: #ffffff;
+}
+
+.app-layout.sidebar-collapsed .sidebar {
+  padding-left: 0;
+  padding-right: 0;
+  border-right: 0;
+}
+
 .content {
   padding: 2rem;
 }
@@ -106,6 +152,27 @@
     flex-direction: column;
     gap: 1rem;
     align-items: flex-start;
+  }
+
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .app-layout.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #e9c8d4;
+    grid-auto-flow: column;
+    align-content: unset;
+    justify-content: start;
+    overflow-x: auto;
+  }
+
+  .app-layout.sidebar-collapsed .sidebar {
+    display: none;
   }
 
   .content {
