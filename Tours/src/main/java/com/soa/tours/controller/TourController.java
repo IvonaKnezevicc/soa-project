@@ -2,16 +2,21 @@ package com.soa.tours.controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.soa.tours.dto.CreateKeyPointRequest;
 import com.soa.tours.dto.CreateTourRequest;
 import com.soa.tours.dto.TourResponse;
+import com.soa.tours.dto.UpdateKeyPointRequest;
 import com.soa.tours.security.CurrentUser;
 import com.soa.tours.security.JwtAuthenticationInterceptor;
 import com.soa.tours.service.TourService;
@@ -42,5 +47,41 @@ public class TourController {
         @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
     ) {
         return tourService.getToursForCurrentAuthor(currentUser);
+    }
+
+    @GetMapping("/{tourId}")
+    public TourResponse getTourById(
+        @PathVariable String tourId,
+        @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
+    ) {
+        return tourService.getTourById(tourId, currentUser);
+    }
+
+    @PostMapping("/{tourId}/key-points")
+    public TourResponse addKeyPoint(
+        @PathVariable String tourId,
+        @Valid @RequestBody CreateKeyPointRequest request,
+        @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
+    ) {
+        return tourService.addKeyPoint(tourId, request, currentUser);
+    }
+
+    @PutMapping("/{tourId}/key-points/{keyPointId}")
+    public TourResponse updateKeyPoint(
+        @PathVariable String tourId,
+        @PathVariable String keyPointId,
+        @Valid @RequestBody UpdateKeyPointRequest request,
+        @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
+    ) {
+        return tourService.updateKeyPoint(tourId, keyPointId, request, currentUser);
+    }
+
+    @DeleteMapping("/{tourId}/key-points/{keyPointId}")
+    public TourResponse deleteKeyPoint(
+        @PathVariable String tourId,
+        @PathVariable String keyPointId,
+        @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
+    ) {
+        return tourService.deleteKeyPoint(tourId, keyPointId, currentUser);
     }
 }

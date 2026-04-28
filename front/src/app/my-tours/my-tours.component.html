@@ -17,6 +17,7 @@
     <article class="tour-card" *ngFor="let tour of visibleTours">
       <div class="tour-topline">
         <span class="difficulty-pill">{{ tour.difficulty }}</span>
+        <a class="manage-points-link" [routerLink]="['/my-tours', tour.id, 'key-points']">Add key points</a>
       </div>
 
       <h2>{{ tour.name }}</h2>

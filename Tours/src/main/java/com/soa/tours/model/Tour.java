@@ -19,6 +19,7 @@ public class Tour {
     private String description;
     private TourDifficulty difficulty;
     private List<String> tags = new ArrayList<>();
+    private List<KeyPoint> keyPoints = new ArrayList<>();
     private TourStatus status;
     private BigDecimal price;
     private Instant createdAt;
@@ -78,6 +79,14 @@ public class Tour {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
+    }
+
+    public List<KeyPoint> getKeyPoints() {
+        return keyPoints;
+    }
+
+    public void setKeyPoints(List<KeyPoint> keyPoints) {
+        this.keyPoints = keyPoints;
     }
 
     public TourStatus getStatus() {

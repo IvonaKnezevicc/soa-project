@@ -13,6 +13,7 @@ public class TourResponse {
     private String description;
     private String difficulty;
     private List<String> tags;
+    private List<KeyPointResponse> keyPoints;
     private String status;
     private BigDecimal price;
     private Instant createdAt;
@@ -29,6 +30,7 @@ public class TourResponse {
         String description,
         String difficulty,
         List<String> tags,
+        List<KeyPointResponse> keyPoints,
         String status,
         BigDecimal price,
         Instant createdAt,
@@ -41,6 +43,7 @@ public class TourResponse {
         this.description = description;
         this.difficulty = difficulty;
         this.tags = tags;
+        this.keyPoints = keyPoints;
         this.status = status;
         this.price = price;
         this.createdAt = createdAt;
@@ -101,6 +104,14 @@ public class TourResponse {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
+    }
+
+    public List<KeyPointResponse> getKeyPoints() {
+        return keyPoints;
+    }
+
+    public void setKeyPoints(List<KeyPointResponse> keyPoints) {
+        this.keyPoints = keyPoints;
     }
 
     public String getStatus() {

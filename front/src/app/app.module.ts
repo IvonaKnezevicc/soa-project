@@ -13,6 +13,7 @@ import { HomeComponent } from './home/home.component';
 import { FindUsersComponent } from './find-users/find-users.component';
 import { MyToursComponent } from './my-tours/my-tours.component';
 import { ProfileComponent } from './profile/profile.component';
+import { TourKeyPointsComponent } from './tour-key-points/tour-key-points.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 
 @NgModule({
@@ -25,7 +26,8 @@ import { AuthInterceptor } from './services/auth.interceptor';
     FindUsersComponent,
     ProfileComponent,
     CreateTourComponent,
-    MyToursComponent
+    MyToursComponent,
+    TourKeyPointsComponent
   ],
   imports: [
     BrowserModule,
