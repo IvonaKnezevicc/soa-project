@@ -1,0 +1,47 @@
+<section class="my-tours-page">
+  <div class="page-header">
+    <h1>My tours</h1>
+    <span class="total-pill">Total: {{ totalCount }}</span>
+  </div>
+
+  <div class="status-tabs">
+    <button type="button" [class.active]="selectedStatus === 'draft'" (click)="setStatus('draft')">Draft</button>
+    <button type="button" [class.active]="selectedStatus === 'published'" (click)="setStatus('published')">Published</button>
+    <button type="button" [class.active]="selectedStatus === 'archived'" (click)="setStatus('archived')">Archived</button>
+  </div>
+
+  <p class="page-message" *ngIf="isLoading">Loading tours...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <div class="tour-list" *ngIf="!isLoading && !errorMessage && visibleTours.length; else emptyState">
+    <article class="tour-card" *ngFor="let tour of visibleTours">
+      <div class="tour-topline">
+        <span class="difficulty-pill">{{ tour.difficulty }}</span>
+      </div>
+
+      <h2>{{ tour.name }}</h2>
+      <p class="tour-description">{{ tour.description }}</p>
+
+      <div class="tag-row">
+        <span class="tag" *ngFor="let tag of tour.tags">{{ tag }}</span>
+      </div>
+
+      <div class="tour-meta">
+        <span>Price: {{ tour.price | number:'1.0-0' }}</span>
+        <span>Created: {{ tour.createdAt | date:'medium' }}</span>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state" *ngIf="!isLoading && !errorMessage">
+      No {{ selectedStatus }} tours found.
+    </div>
+  </ng-template>
+
+  <div class="pagination" *ngIf="!isLoading && !errorMessage && totalCount > pageSize">
+    <button type="button" (click)="previousPage()" [disabled]="page <= 1">Previous</button>
+    <span>Page {{ page }} of {{ totalPages }}</span>
+    <button type="button" (click)="nextPage()" [disabled]="page >= totalPages">Next</button>
+  </div>
+</section>

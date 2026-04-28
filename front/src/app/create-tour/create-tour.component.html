@@ -1,0 +1,46 @@
+<section class="create-tour-page">
+  <h1>Create tour</h1>
+
+  <p class="page-message success" *ngIf="successMessage">{{ successMessage }}</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <form class="tour-form" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="field">
+      <span>Name</span>
+      <input type="text" formControlName="name" placeholder="Enter tour name" />
+      <small *ngIf="form.controls.name.touched && form.controls.name.invalid">Name is required.</small>
+    </label>
+
+    <label class="field">
+      <span>Description</span>
+      <textarea rows="7" formControlName="description" placeholder="Describe the experience, route and audience"></textarea>
+      <small *ngIf="form.controls.description.touched && form.controls.description.invalid">Description is required.</small>
+    </label>
+
+    <div class="field">
+      <span>Difficulty</span>
+      <div class="difficulty-grid">
+        <label class="difficulty-card" *ngFor="let option of difficultyOptions" [class.active]="form.controls.difficulty.value === option.value">
+          <input type="radio" formControlName="difficulty" [value]="option.value" />
+          <strong>{{ option.label }}</strong>
+          <small>{{ option.helper }}</small>
+        </label>
+      </div>
+    </div>
+
+    <label class="field">
+      <span>Tags</span>
+      <input type="text" formControlName="tagsInput" placeholder="nature, hiking, weekend" (input)="clearTagsValidation()" />
+      <small *ngIf="tagsValidationMessage; else tagsHint" class="field-error">{{ tagsValidationMessage }}</small>
+      <ng-template #tagsHint>
+        <small>Separate tags with commas.</small>
+      </ng-template>
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Creating...' : 'Create tour' }}
+      </button>
+    </div>
+  </form>
+</section>

@@ -56,6 +56,15 @@ services:
       retries: 10
       start_period: 20s
 
+  tours-mongo:
+    image: mongo:7
+    container_name: tours-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - tours_mongo_data:/data/db
+
   stakeholders:
     build:
       context: ./stakeholders
@@ -119,6 +128,21 @@ services:
       STAKEHOLDERS_SERVICE_URL: "http://stakeholders:8080"
       CORS_ALLOWED_ORIGINS: "http://localhost:4200"
 
+  tours:
+    build:
+      context: ./Tours
+    container_name: soa-tours-app
+    restart: unless-stopped
+    depends_on:
+      - tours-mongo
+    ports:
+      - "8083:8083"
+    environment:
+      SERVER_PORT: "8083"
+      MONGODB_URI: "mongodb://tours-mongo:27017/toursdb"
+      JWT_SECRET: "change-me"
+      JWT_ISSUER: "stakeholders-service"
+
   front:
     build:
       context: ./front
@@ -128,6 +152,7 @@ services:
       - blog
       - stakeholders
       - follower
+      - tours
 
   gateway:
     build:
@@ -139,6 +164,7 @@ services:
       - stakeholders
       - blog
       - follower
+      - tours
     ports:
       - "4200:80"
 
@@ -149,3 +175,4 @@ volumes:
   blog_neo4j_logs:
   follower_neo4j_data:
   follower_neo4j_logs:
+  tours_mongo_data:
