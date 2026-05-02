@@ -1,0 +1,158 @@
+.position-simulator-page {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-header h1,
+.position-panel h2 {
+  margin: 0;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+}
+
+.page-header p {
+  margin: 0.45rem 0 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.page-message,
+.empty-state {
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e9c8d4;
+}
+
+.page-message.error {
+  color: #8b1e3f;
+}
+
+.page-message.success {
+  color: #15803d;
+}
+
+.simulator-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.map-panel,
+.position-panel {
+  border-radius: 24px;
+  border: 1px solid #e9c8d4;
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+}
+
+.map-panel {
+  padding: 1rem;
+}
+
+.map-shell {
+  height: 620px;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.map-hint {
+  margin: 0.9rem 0 0;
+  color: #475569;
+  font-weight: 600;
+}
+
+.position-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.3rem;
+}
+
+.position-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.position-panel-header span {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.86rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.position-panel-header span.saved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.coordinate-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.coordinate-list div {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: #fff7fa;
+  border: 1px solid #e9c8d4;
+}
+
+.coordinate-list span {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.coordinate-list strong {
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 980px) {
+  .simulator-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .map-shell {
+    height: 420px;
+  }
+}
+
+@media (max-width: 700px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .position-panel-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .map-panel,
+  .position-panel {
+    border-radius: 18px;
+  }
+
+  .map-shell {
+    border-radius: 14px;
+  }
+}

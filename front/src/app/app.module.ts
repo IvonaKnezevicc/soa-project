@@ -12,6 +12,7 @@ import { CreateTourComponent } from './create-tour/create-tour.component';
 import { HomeComponent } from './home/home.component';
 import { FindUsersComponent } from './find-users/find-users.component';
 import { MyToursComponent } from './my-tours/my-tours.component';
+import { PositionSimulatorComponent } from './position-simulator/position-simulator.component';
 import { ProfileComponent } from './profile/profile.component';
 import { TourKeyPointsComponent } from './tour-key-points/tour-key-points.component';
 import { AuthInterceptor } from './services/auth.interceptor';
@@ -27,6 +28,7 @@ import { AuthInterceptor } from './services/auth.interceptor';
     ProfileComponent,
     CreateTourComponent,
     MyToursComponent,
+    PositionSimulatorComponent,
     TourKeyPointsComponent
   ],
   imports: [

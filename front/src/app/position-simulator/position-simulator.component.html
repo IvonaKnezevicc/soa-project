@@ -1,0 +1,47 @@
+<section class="position-simulator-page">
+  <div class="page-header">
+    <div>
+      <h1>Position simulator</h1>
+      <p>Set the current tourist position on the map.</p>
+    </div>
+  </div>
+
+  <p class="page-message" *ngIf="isLoading">Loading position...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="page-message success" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <div class="simulator-layout" *ngIf="!isLoading">
+    <div class="map-panel">
+      <div id="position-simulator-map" class="map-shell"></div>
+      <p class="map-hint">{{ isSaving ? 'Saving position...' : mapHintMessage }}</p>
+    </div>
+
+    <aside class="position-panel">
+      <div class="position-panel-header">
+        <h2>Current coordinates</h2>
+        <span [class.saved]="position">{{ position ? 'Saved' : 'Not set' }}</span>
+      </div>
+
+      <div class="coordinate-list" *ngIf="selectedLatitude !== null && selectedLongitude !== null; else noPosition">
+        <div>
+          <span>Latitude</span>
+          <strong>{{ selectedLatitude }}</strong>
+        </div>
+        <div>
+          <span>Longitude</span>
+          <strong>{{ selectedLongitude }}</strong>
+        </div>
+        <div *ngIf="position">
+          <span>Updated</span>
+          <strong>{{ position.updatedAt | date:'medium' }}</strong>
+        </div>
+      </div>
+
+      <ng-template #noPosition>
+        <div class="empty-state">
+          Click on the map to choose your current location.
+        </div>
+      </ng-template>
+    </aside>
+  </div>
+</section>

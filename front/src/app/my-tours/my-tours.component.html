@@ -17,7 +17,17 @@
     <article class="tour-card" *ngFor="let tour of visibleTours">
       <div class="tour-topline">
         <span class="difficulty-pill">{{ tour.difficulty }}</span>
-        <a class="manage-points-link" [routerLink]="['/my-tours', tour.id, 'key-points']">Add key points</a>
+        <div class="tour-actions">
+          <a class="manage-points-link" [routerLink]="['/my-tours', tour.id, 'key-points']">Add key points</a>
+          <button
+            type="button"
+            *ngFor="let status of getAvailableStatuses(tour.status)"
+            [disabled]="updatingTourId === tour.id"
+            (click)="changeTourStatus(tour, status)"
+          >
+            {{ getStatusLabel(status) }}
+          </button>
+        </div>
       </div>
 
       <h2>{{ tour.name }}</h2>
@@ -31,6 +41,7 @@
         <span>Price: {{ tour.price | number:'1.0-0' }}</span>
         <span>Created: {{ tour.createdAt | date:'medium' }}</span>
       </div>
+
     </article>
   </div>
 

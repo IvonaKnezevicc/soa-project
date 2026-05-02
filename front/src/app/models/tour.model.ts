@@ -1,5 +1,7 @@
 import { KeyPoint } from './key-point.model';
 
+export type TourStatus = 'draft' | 'published' | 'archived';
+
 export interface Tour {
   id: string;
   authorId: string;
@@ -9,7 +11,7 @@ export interface Tour {
   difficulty: 'easy' | 'medium' | 'advanced' | 'hard';
   tags: string[];
   keyPoints: KeyPoint[];
-  status: 'draft' | 'published' | 'archived';
+  status: TourStatus;
   price: number;
   createdAt: string;
   updatedAt: string;

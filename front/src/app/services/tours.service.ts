@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 
 import { CreateTourRequest } from '../models/create-tour-request.model';
 import { KeyPointPayload } from '../models/key-point-payload.model';
-import { Tour } from '../models/tour.model';
+import { Tour, TourStatus } from '../models/tour.model';
+import { TouristPosition } from '../models/tourist-position.model';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,18 @@ export class ToursService {
 
   getTourById(tourId: string): Observable<Tour> {
     return this.http.get<Tour>(`${this.baseUrl}/${encodeURIComponent(tourId)}`);
+  }
+
+  updateTourStatus(tourId: string, status: TourStatus): Observable<Tour> {
+    return this.http.patch<Tour>(`${this.baseUrl}/${encodeURIComponent(tourId)}/status`, { status });
+  }
+
+  getMyPosition(): Observable<TouristPosition> {
+    return this.http.get<TouristPosition>(`${this.baseUrl}/position/me`);
+  }
+
+  updateMyPosition(latitude: number, longitude: number): Observable<TouristPosition> {
+    return this.http.put<TouristPosition>(`${this.baseUrl}/position/me`, { latitude, longitude });
   }
 
   createKeyPoint(tourId: string, payload: KeyPointPayload): Observable<Tour> {

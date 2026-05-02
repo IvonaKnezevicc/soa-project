@@ -41,6 +41,7 @@
         <a *ngIf="currentUser.role !== 'admin'" routerLink="/find-users" routerLinkActive="active">Find users</a>
         <a *ngIf="currentUser.role === 'guide'" routerLink="/create-tour" routerLinkActive="active">Create tour</a>
         <a *ngIf="currentUser.role === 'guide'" routerLink="/my-tours" routerLinkActive="active">My tours</a>
+        <a *ngIf="currentUser.role === 'tourist'" routerLink="/position-simulator" routerLinkActive="active">Position simulator</a>
       </aside>
 
       <main class="content">

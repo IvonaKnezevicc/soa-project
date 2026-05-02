@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
-import { Tour } from '../models/tour.model';
+import { Tour, TourStatus } from '../models/tour.model';
 import { ToursService } from '../services/tours.service';
-
-type TourStatusFilter = 'draft' | 'published' | 'archived';
 
 @Component({
   selector: 'app-my-tours',
@@ -14,12 +12,13 @@ export class MyToursComponent implements OnInit {
   tours: Tour[] = [];
   filteredTours: Tour[] = [];
   visibleTours: Tour[] = [];
-  selectedStatus: TourStatusFilter = 'draft';
+  selectedStatus: TourStatus = 'draft';
   page = 1;
   pageSize = 15;
   totalCount = 0;
   totalPages = 0;
   isLoading = false;
+  updatingTourId = '';
   errorMessage = '';
 
   constructor(private readonly toursService: ToursService) {}
@@ -28,13 +27,58 @@ export class MyToursComponent implements OnInit {
     this.loadTours();
   }
 
-  setStatus(status: TourStatusFilter): void {
+  setStatus(status: TourStatus): void {
     if (this.selectedStatus === status || this.isLoading) {
       return;
     }
 
     this.selectedStatus = status;
     this.applyFilters();
+  }
+
+  changeTourStatus(tour: Tour, status: TourStatus): void {
+    if (tour.status === status || this.isLoading || this.updatingTourId) {
+      return;
+    }
+
+    this.updatingTourId = tour.id;
+    this.errorMessage = '';
+
+    this.toursService.updateTourStatus(tour.id, status).subscribe({
+      next: (updatedTour) => {
+        this.tours = this.tours.map((item) => item.id === updatedTour.id ? updatedTour : item);
+        this.applyFilters();
+        this.updatingTourId = '';
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? 'Failed to update tour status.';
+        this.updatingTourId = '';
+      }
+    });
+  }
+
+  getStatusLabel(status: TourStatus): string {
+    if (status === 'published') {
+      return 'Publish';
+    }
+
+    if (status === 'archived') {
+      return 'Archive';
+    }
+
+    return 'Draft';
+  }
+
+  getAvailableStatuses(status: TourStatus): TourStatus[] {
+    if (status === 'draft') {
+      return ['published'];
+    }
+
+    if (status === 'published') {
+      return ['draft', 'archived'];
+    }
+
+    return ['draft', 'published'];
   }
 
   previousPage(): void {

@@ -12,11 +12,16 @@ import com.soa.tours.dto.CreateKeyPointRequest;
 import com.soa.tours.dto.CreateTourRequest;
 import com.soa.tours.dto.KeyPointResponse;
 import com.soa.tours.dto.TourResponse;
+import com.soa.tours.dto.TouristPositionResponse;
 import com.soa.tours.dto.UpdateKeyPointRequest;
+import com.soa.tours.dto.UpdateTourStatusRequest;
+import com.soa.tours.dto.UpdateTouristPositionRequest;
 import com.soa.tours.exception.ApiException;
 import com.soa.tours.model.KeyPoint;
 import com.soa.tours.model.Tour;
 import com.soa.tours.model.TourStatus;
+import com.soa.tours.model.TouristPosition;
+import com.soa.tours.repository.TouristPositionRepository;
 import com.soa.tours.repository.TourRepository;
 import com.soa.tours.security.CurrentUser;
 
@@ -24,9 +29,11 @@ import com.soa.tours.security.CurrentUser;
 public class TourService {
 
     private final TourRepository tourRepository;
+    private final TouristPositionRepository touristPositionRepository;
 
-    public TourService(TourRepository tourRepository) {
+    public TourService(TourRepository tourRepository, TouristPositionRepository touristPositionRepository) {
         this.tourRepository = tourRepository;
+        this.touristPositionRepository = touristPositionRepository;
     }
 
     public TourResponse createTour(CreateTourRequest request, CurrentUser currentUser) {
@@ -69,6 +76,16 @@ public class TourService {
     public TourResponse getTourById(String tourId, CurrentUser currentUser) {
         Tour tour = findOwnedTour(tourId, currentUser);
         return toResponse(tour);
+    }
+
+    public TourResponse updateTourStatus(String tourId, UpdateTourStatusRequest request, CurrentUser currentUser) {
+        Tour tour = findOwnedTour(tourId, currentUser);
+
+        tour.setStatus(request.getStatus());
+        tour.setUpdatedAt(Instant.now());
+
+        Tour savedTour = tourRepository.save(tour);
+        return toResponse(savedTour);
     }
 
     public TourResponse addKeyPoint(String tourId, CreateKeyPointRequest request, CurrentUser currentUser) {
@@ -117,6 +134,34 @@ public class TourService {
         return toResponse(savedTour);
     }
 
+    public TouristPositionResponse getCurrentTouristPosition(CurrentUser currentUser) {
+        ensureTourist(currentUser);
+
+        TouristPosition position = touristPositionRepository.findByTouristUsername(currentUser.getUsername())
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "tourist position not found"));
+
+        return toTouristPositionResponse(position);
+    }
+
+    public TouristPositionResponse updateCurrentTouristPosition(
+        UpdateTouristPositionRequest request,
+        CurrentUser currentUser
+    ) {
+        ensureTourist(currentUser);
+
+        TouristPosition position = touristPositionRepository.findByTouristUsername(currentUser.getUsername())
+            .orElseGet(TouristPosition::new);
+
+        position.setTouristId(currentUser.getUserId());
+        position.setTouristUsername(currentUser.getUsername());
+        position.setLatitude(request.getLatitude());
+        position.setLongitude(request.getLongitude());
+        position.setUpdatedAt(Instant.now());
+
+        TouristPosition savedPosition = touristPositionRepository.save(position);
+        return toTouristPositionResponse(savedPosition);
+    }
+
     private Tour findOwnedTour(String tourId, CurrentUser currentUser) {
         if (!"guide".equals(currentUser.getRole())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "only guide users can manage tours");
@@ -130,6 +175,12 @@ public class TourService {
         }
 
         return tour;
+    }
+
+    private void ensureTourist(CurrentUser currentUser) {
+        if (!"tourist".equals(currentUser.getRole())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "only tourist users can manage current position");
+        }
     }
 
     private KeyPoint findKeyPoint(Tour tour, String keyPointId) {
@@ -167,6 +218,17 @@ public class TourService {
             tour.getPrice(),
             tour.getCreatedAt(),
             tour.getUpdatedAt()
+        );
+    }
+
+    private TouristPositionResponse toTouristPositionResponse(TouristPosition position) {
+        return new TouristPositionResponse(
+            position.getId(),
+            position.getTouristId(),
+            position.getTouristUsername(),
+            position.getLatitude(),
+            position.getLongitude(),
+            position.getUpdatedAt()
         );
     }
 
