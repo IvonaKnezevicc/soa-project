@@ -1,6 +1,7 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 
@@ -14,12 +15,15 @@ import { ToursService } from '../services/tours.service';
   styleUrls: ['./tour-key-points.component.css']
 })
 export class TourKeyPointsComponent implements OnInit, OnDestroy {
+  @ViewChild('imageInput') imageInputRef?: ElementRef<HTMLInputElement>;
   tour: Tour | null = null;
   selectedKeyPointId: string | null = null;
   isLoading = false;
   isSaving = false;
+  isSavingDurations = false;
   errorMessage = '';
   successMessage = '';
+  durationsMessage = '';
   mapHintMessage = 'Click on the map to pick a location.';
 
   private map: L.Map | null = null;
@@ -36,10 +40,17 @@ export class TourKeyPointsComponent implements OnInit, OnDestroy {
     longitude: [0]
   });
 
+  readonly durationsForm = this.formBuilder.group({
+    walkingMinutes: [0, [Validators.min(0)]],
+    bicycleMinutes: [0, [Validators.min(0)]],
+    carMinutes: [0, [Validators.min(0)]]
+  });
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly toursService: ToursService,
-    private readonly formBuilder: NonNullableFormBuilder
+    private readonly formBuilder: NonNullableFormBuilder,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
@@ -54,8 +65,12 @@ export class TourKeyPointsComponent implements OnInit, OnDestroy {
     }
   }
 
+  get isDraftTour(): boolean {
+    return (this.tour?.status ?? '') === 'draft';
+  }
+
   selectForCreate(): void {
-    if (this.isSaving) {
+    if (this.isSaving || !this.isDraftTour) {
       return;
     }
 
@@ -70,11 +85,14 @@ export class TourKeyPointsComponent implements OnInit, OnDestroy {
       latitude: 0,
       longitude: 0
     });
+    if (this.imageInputRef?.nativeElement) {
+      this.imageInputRef.nativeElement.value = '';
+    }
     this.renderDraftPoint();
   }
 
   editKeyPoint(keyPoint: KeyPoint): void {
-    if (this.isSaving) {
+    if (this.isSaving || !this.isDraftTour) {
       return;
     }
 
@@ -94,6 +112,10 @@ export class TourKeyPointsComponent implements OnInit, OnDestroy {
   }
 
   submit(): void {
+    if (!this.isDraftTour) {
+      return;
+    }
+
     this.errorMessage = '';
     this.successMessage = '';
 
@@ -136,8 +158,48 @@ export class TourKeyPointsComponent implements OnInit, OnDestroy {
     });
   }
 
+  saveAndClose(): void {
+    if (!this.tour || this.isSavingDurations) {
+      return;
+    }
+
+    if (!this.isDraftTour) {
+      this.router.navigate(['/my-tours']);
+      return;
+    }
+
+    const raw = this.durationsForm.getRawValue();
+    const durations = [
+      { transportType: 'walking' as const, minutes: Number(raw.walkingMinutes) || 0 },
+      { transportType: 'bicycle' as const, minutes: Number(raw.bicycleMinutes) || 0 },
+      { transportType: 'car' as const, minutes: Number(raw.carMinutes) || 0 }
+    ].filter((item) => item.minutes > 0);
+
+    if (!durations.length) {
+      this.router.navigate(['/my-tours']);
+      return;
+    }
+
+    this.errorMessage = '';
+    this.durationsMessage = '';
+    this.isSavingDurations = true;
+
+    this.toursService.updateTourDurations(this.tour.id, durations).subscribe({
+      next: (tour) => {
+        this.applyTour(tour);
+        this.durationsMessage = 'Saved.';
+        this.isSavingDurations = false;
+        this.router.navigate(['/my-tours']);
+      },
+      error: (error) => {
+        this.errorMessage = error?.error?.message ?? 'Failed to save durations.';
+        this.isSavingDurations = false;
+      }
+    });
+  }
+
   deleteKeyPoint(keyPoint: KeyPoint): void {
-    if (this.isSaving) {
+    if (this.isSaving || !this.isDraftTour) {
       return;
     }
 
@@ -227,7 +289,17 @@ export class TourKeyPointsComponent implements OnInit, OnDestroy {
       ...tour,
       keyPoints: [...tour.keyPoints].sort((left, right) => left.order - right.order)
     };
+    this.patchDurationsForm(this.tour);
     this.renderTour();
+  }
+
+  private patchDurationsForm(tour: Tour): void {
+    const byType = new Map(tour.durations.map((duration) => [duration.transportType, duration.minutes]));
+    this.durationsForm.patchValue({
+      walkingMinutes: byType.get('walking') ?? 0,
+      bicycleMinutes: byType.get('bicycle') ?? 0,
+      carMinutes: byType.get('car') ?? 0
+    }, { emitEvent: false });
   }
 
   private ensureMapInitialized(): void {
@@ -255,6 +327,10 @@ export class TourKeyPointsComponent implements OnInit, OnDestroy {
     this.draftLayer.addTo(this.map);
 
     this.map.on('click', (event: L.LeafletMouseEvent) => {
+      if (!this.isDraftTour) {
+        this.mapHintMessage = 'This tour is read-only. Switch to a draft tour to edit key points.';
+        return;
+      }
       this.form.patchValue({
         latitude: Number(event.latlng.lat.toFixed(6)),
         longitude: Number(event.latlng.lng.toFixed(6))

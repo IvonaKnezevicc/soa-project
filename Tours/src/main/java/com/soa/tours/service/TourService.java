@@ -1,9 +1,14 @@
 package com.soa.tours.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,18 +17,23 @@ import com.soa.tours.dto.CreateTourReviewRequest;
 import com.soa.tours.dto.CreateKeyPointRequest;
 import com.soa.tours.dto.CreateTourRequest;
 import com.soa.tours.dto.KeyPointResponse;
+import com.soa.tours.dto.TourDurationResponse;
 import com.soa.tours.dto.TourReviewResponse;
 import com.soa.tours.dto.TourResponse;
 import com.soa.tours.dto.TouristPositionResponse;
 import com.soa.tours.dto.UpdateKeyPointRequest;
+import com.soa.tours.dto.UpdateTourDurationsRequest;
+import com.soa.tours.dto.UpdateTourRequest;
 import com.soa.tours.dto.UpdateTourStatusRequest;
 import com.soa.tours.dto.UpdateTouristPositionRequest;
 import com.soa.tours.exception.ApiException;
 import com.soa.tours.model.KeyPoint;
 import com.soa.tours.model.Tour;
+import com.soa.tours.model.TourDuration;
 import com.soa.tours.model.TourReview;
 import com.soa.tours.model.TourStatus;
 import com.soa.tours.model.TouristPosition;
+import com.soa.tours.model.TransportType;
 import com.soa.tours.repository.TouristPositionRepository;
 import com.soa.tours.repository.TourReviewRepository;
 import com.soa.tours.repository.TourRepository;
@@ -63,7 +73,9 @@ public class TourService {
         if (tour.getTags().isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "at least one tag is required");
         }
+        tour.setDurations(normalizeDurations(request.getDurations()));
         tour.setStatus(TourStatus.DRAFT);
+        tour.setDistanceInKm(0D);
         tour.setPrice(BigDecimal.ZERO);
         tour.setCreatedAt(now);
         tour.setUpdatedAt(now);
@@ -90,7 +102,7 @@ public class TourService {
 
         return tourRepository.findByStatusOrderByCreatedAtDesc(TourStatus.PUBLISHED)
             .stream()
-            .map(this::toResponse)
+            .map(this::toTouristResponse)
             .toList();
     }
 
@@ -101,9 +113,31 @@ public class TourService {
 
     public TourResponse updateTourStatus(String tourId, UpdateTourStatusRequest request, CurrentUser currentUser) {
         Tour tour = findOwnedTour(tourId, currentUser);
+        TourStatus requestedStatus = request.getStatus();
+        TourStatus currentStatus = tour.getStatus();
+        Instant now = Instant.now();
 
-        tour.setStatus(request.getStatus());
-        tour.setUpdatedAt(Instant.now());
+        if (requestedStatus == currentStatus) {
+            return toResponse(tour);
+        }
+
+        if (currentStatus == TourStatus.DRAFT && requestedStatus == TourStatus.PUBLISHED) {
+            validatePublishRequirements(tour);
+            tour.setStatus(TourStatus.PUBLISHED);
+            tour.setPublishedAt(now);
+        } else if (currentStatus == TourStatus.PUBLISHED && requestedStatus == TourStatus.ARCHIVED) {
+            tour.setStatus(TourStatus.ARCHIVED);
+            tour.setArchivedAt(now);
+        } else if (currentStatus == TourStatus.ARCHIVED && requestedStatus == TourStatus.PUBLISHED) {
+            validatePublishRequirements(tour);
+            tour.setStatus(TourStatus.PUBLISHED);
+            tour.setPublishedAt(now);
+            tour.setArchivedAt(null);
+        } else {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "invalid status transition");
+        }
+
+        tour.setUpdatedAt(now);
 
         Tour savedTour = tourRepository.save(tour);
         return toResponse(savedTour);
@@ -111,6 +145,7 @@ public class TourService {
 
     public TourResponse addKeyPoint(String tourId, CreateKeyPointRequest request, CurrentUser currentUser) {
         Tour tour = findOwnedTour(tourId, currentUser);
+        ensureDraftTour(tour, "key points can be added only while tour is in draft");
 
         KeyPoint keyPoint = new KeyPoint();
         keyPoint.setId(UUID.randomUUID().toString());
@@ -122,6 +157,7 @@ public class TourService {
         keyPoint.setOrder(tour.getKeyPoints().size() + 1);
 
         tour.getKeyPoints().add(keyPoint);
+        tour.setDistanceInKm(calculateTourDistanceInKm(tour.getKeyPoints()));
         tour.setUpdatedAt(Instant.now());
 
         Tour savedTour = tourRepository.save(tour);
@@ -130,6 +166,7 @@ public class TourService {
 
     public TourResponse updateKeyPoint(String tourId, String keyPointId, UpdateKeyPointRequest request, CurrentUser currentUser) {
         Tour tour = findOwnedTour(tourId, currentUser);
+        ensureDraftTour(tour, "key points can be edited only while tour is in draft");
         KeyPoint keyPoint = findKeyPoint(tour, keyPointId);
 
         keyPoint.setName(request.getName().trim());
@@ -137,6 +174,7 @@ public class TourService {
         keyPoint.setImage(normalizeImage(request.getImage()));
         keyPoint.setLatitude(request.getLatitude());
         keyPoint.setLongitude(request.getLongitude());
+        tour.setDistanceInKm(calculateTourDistanceInKm(tour.getKeyPoints()));
         tour.setUpdatedAt(Instant.now());
 
         Tour savedTour = tourRepository.save(tour);
@@ -145,10 +183,12 @@ public class TourService {
 
     public TourResponse deleteKeyPoint(String tourId, String keyPointId, CurrentUser currentUser) {
         Tour tour = findOwnedTour(tourId, currentUser);
+        ensureDraftTour(tour, "key points can be deleted only while tour is in draft");
         KeyPoint keyPoint = findKeyPoint(tour, keyPointId);
 
         tour.getKeyPoints().remove(keyPoint);
         reindexKeyPoints(tour);
+        tour.setDistanceInKm(calculateTourDistanceInKm(tour.getKeyPoints()));
         tour.setUpdatedAt(Instant.now());
 
         Tour savedTour = tourRepository.save(tour);
@@ -261,6 +301,12 @@ public class TourService {
         }
     }
 
+    private void ensureDraftTour(Tour tour, String message) {
+        if (tour.getStatus() != TourStatus.DRAFT) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, message);
+        }
+    }
+
     private KeyPoint findKeyPoint(Tour tour, String keyPointId) {
         return tour.getKeyPoints().stream()
             .filter(item -> item.getId().equals(keyPointId))
@@ -272,6 +318,113 @@ public class TourService {
         for (int index = 0; index < tour.getKeyPoints().size(); index++) {
             tour.getKeyPoints().get(index).setOrder(index + 1);
         }
+    }
+
+    public TourResponse updateTourDurations(
+        String tourId,
+        UpdateTourDurationsRequest request,
+        CurrentUser currentUser
+    ) {
+        Tour tour = findOwnedTour(tourId, currentUser);
+        ensureDraftTour(tour, "durations can be updated only while tour is in draft");
+        tour.setDurations(normalizeDurations(request.getDurations()));
+        tour.setUpdatedAt(Instant.now());
+        Tour savedTour = tourRepository.save(tour);
+        return toResponse(savedTour);
+    }
+
+    public TourResponse updateTour(String tourId, UpdateTourRequest request, CurrentUser currentUser) {
+        Tour tour = findOwnedTour(tourId, currentUser);
+        ensureDraftTour(tour, "tour basic data can be edited only while tour is in draft");
+
+        tour.setName(request.getName().trim());
+        tour.setDescription(request.getDescription().trim());
+        tour.setDifficulty(request.getDifficulty());
+        tour.setTags(request.getTags().stream().map(String::trim).filter(tag -> !tag.isEmpty()).distinct().toList());
+        if (tour.getTags().isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "at least one tag is required");
+        }
+        tour.setPrice(request.getPrice());
+        tour.setUpdatedAt(Instant.now());
+
+        Tour savedTour = tourRepository.save(tour);
+        return toResponse(savedTour);
+    }
+
+    private void validatePublishRequirements(Tour tour) {
+        if (tour.getName() == null || tour.getName().trim().isEmpty()
+            || tour.getDescription() == null || tour.getDescription().trim().isEmpty()
+            || tour.getDifficulty() == null
+            || tour.getTags() == null || tour.getTags().isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "tour must contain basic data");
+        }
+
+        if (tour.getKeyPoints() == null || tour.getKeyPoints().size() < 2) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "tour must contain at least two key points");
+        }
+
+        if (tour.getDurations() == null || tour.getDurations().isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "at least one duration by transport type is required");
+        }
+    }
+
+    private List<TourDuration> normalizeDurations(List<com.soa.tours.dto.TourDurationRequest> requestDurations) {
+        if (requestDurations == null || requestDurations.isEmpty()) {
+            return List.of();
+        }
+
+        Map<TransportType, TourDuration> deduplicated = requestDurations.stream()
+            .filter(item -> item != null && item.getTransportType() != null && item.getMinutes() > 0)
+            .map(item -> {
+                TourDuration duration = new TourDuration();
+                duration.setTransportType(item.getTransportType());
+                duration.setMinutes(item.getMinutes());
+                return duration;
+            })
+            .collect(Collectors.toMap(
+                TourDuration::getTransportType,
+                Function.identity(),
+                (first, second) -> second
+            ));
+
+        return new ArrayList<>(deduplicated.values());
+    }
+
+    private double calculateTourDistanceInKm(List<KeyPoint> keyPoints) {
+        if (keyPoints == null || keyPoints.size() < 2) {
+            return 0D;
+        }
+
+        List<KeyPoint> ordered = keyPoints.stream()
+            .sorted((left, right) -> Integer.compare(left.getOrder(), right.getOrder()))
+            .toList();
+
+        double total = 0D;
+        for (int index = 1; index < ordered.size(); index++) {
+            KeyPoint previous = ordered.get(index - 1);
+            KeyPoint current = ordered.get(index);
+            total += haversineKm(
+                previous.getLatitude(),
+                previous.getLongitude(),
+                current.getLatitude(),
+                current.getLongitude()
+            );
+        }
+
+        return BigDecimal.valueOf(total).setScale(3, RoundingMode.HALF_UP).doubleValue();
+    }
+
+    private double haversineKm(double lat1, double lon1, double lat2, double lon2) {
+        double earthRadiusKm = 6371D;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double latitude1 = Math.toRadians(lat1);
+        double latitude2 = Math.toRadians(lat2);
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusKm * c;
     }
 
     private String normalizeImage(String image) {
@@ -295,17 +448,65 @@ public class TourService {
     }
 
     private TourResponse toResponse(Tour tour) {
+        List<KeyPointResponse> keyPoints = tour.getKeyPoints() == null
+            ? List.of()
+            : tour.getKeyPoints().stream().map(this::toKeyPointResponse).toList();
+        int keyPointCount = keyPoints.size();
+        List<String> tags = tour.getTags() == null ? List.of() : List.copyOf(tour.getTags());
+        List<TourDurationResponse> durations = tour.getDurations() == null
+            ? List.of()
+            : tour.getDurations().stream().map(this::toDurationResponse).toList();
+
         return new TourResponse(
             tour.getId(),
             tour.getAuthorId(),
             tour.getAuthorUsername(),
             tour.getName(),
             tour.getDescription(),
-            tour.getDifficulty().getValue(),
-            List.copyOf(tour.getTags()),
-            tour.getKeyPoints().stream().map(this::toKeyPointResponse).toList(),
-            tour.getStatus().getValue(),
+            tour.getDifficulty() == null ? "" : tour.getDifficulty().getValue(),
+            tags,
+            keyPoints,
+            keyPointCount,
+            durations,
+            tour.getStatus() == null ? TourStatus.DRAFT.getValue() : tour.getStatus().getValue(),
+            tour.getDistanceInKm(),
             tour.getPrice(),
+            tour.getPublishedAt(),
+            tour.getArchivedAt(),
+            tour.getCreatedAt(),
+            tour.getUpdatedAt()
+        );
+    }
+
+    private TourResponse toTouristResponse(Tour tour) {
+        List<KeyPoint> keyPoints = tour.getKeyPoints() == null ? List.of() : tour.getKeyPoints();
+        int keyPointCount = keyPoints.size();
+        List<KeyPointResponse> visibleKeyPoints = keyPoints.stream()
+            .sorted((left, right) -> Integer.compare(left.getOrder(), right.getOrder()))
+            .limit(1)
+            .map(this::toKeyPointResponse)
+            .toList();
+        List<TourDurationResponse> durations = tour.getDurations() == null
+            ? List.of()
+            : tour.getDurations().stream().map(this::toDurationResponse).toList();
+        List<String> tags = tour.getTags() == null ? List.of() : List.copyOf(tour.getTags());
+
+        return new TourResponse(
+            tour.getId(),
+            tour.getAuthorId(),
+            tour.getAuthorUsername(),
+            tour.getName(),
+            tour.getDescription(),
+            tour.getDifficulty() == null ? "" : tour.getDifficulty().getValue(),
+            tags,
+            visibleKeyPoints,
+            keyPointCount,
+            durations,
+            tour.getStatus() == null ? TourStatus.DRAFT.getValue() : tour.getStatus().getValue(),
+            tour.getDistanceInKm(),
+            tour.getPrice(),
+            tour.getPublishedAt(),
+            tour.getArchivedAt(),
             tour.getCreatedAt(),
             tour.getUpdatedAt()
         );
@@ -346,6 +547,13 @@ public class TourService {
             keyPoint.getLatitude(),
             keyPoint.getLongitude(),
             keyPoint.getOrder()
+        );
+    }
+
+    private TourDurationResponse toDurationResponse(TourDuration tourDuration) {
+        return new TourDurationResponse(
+            tourDuration.getTransportType().getValue(),
+            tourDuration.getMinutes()
         );
     }
 }

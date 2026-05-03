@@ -10,6 +10,53 @@
     <button type="button" [class.active]="selectedStatus === 'archived'" (click)="setStatus('archived')">Archived</button>
   </div>
 
+  <div class="modal-overlay" *ngIf="editingTour as currentEditingTour" (click)="cancelEdit()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Edit tour</h3>
+        <button type="button" class="toast-close" (click)="cancelEdit()" aria-label="Close">x</button>
+      </div>
+
+      <form class="edit-form" [formGroup]="editForm" (ngSubmit)="saveEdit(currentEditingTour)">
+        <label>
+          <span>Name</span>
+          <input type="text" formControlName="name" />
+        </label>
+        <label>
+          <span>Description</span>
+          <textarea rows="3" formControlName="description"></textarea>
+        </label>
+        <div class="edit-grid">
+          <label>
+            <span>Difficulty</span>
+            <select formControlName="difficulty">
+              <option *ngFor="let d of difficultyOptions" [value]="d">{{ d }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Price</span>
+            <input type="number" min="0" step="0.01" formControlName="price" />
+          </label>
+        </div>
+        <label>
+          <span>Tags (comma separated)</span>
+          <input type="text" formControlName="tagsInput" />
+        </label>
+        <div class="edit-actions">
+          <button type="submit" [disabled]="isSavingEdit">{{ isSavingEdit ? 'Saving...' : 'Save changes' }}</button>
+          <button type="button" class="secondary" (click)="cancelEdit()" [disabled]="isSavingEdit">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast toast-error" *ngIf="showToast">
+    <div class="toast-content">
+      <p>{{ toastMessage }}</p>
+    </div>
+    <button type="button" class="toast-close" (click)="closeToast()" aria-label="Close notification">x</button>
+  </div>
+
   <p class="page-message" *ngIf="isLoading">Loading tours...</p>
   <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
@@ -18,7 +65,24 @@
       <div class="tour-topline">
         <span class="difficulty-pill">{{ tour.difficulty }}</span>
         <div class="tour-actions">
-          <a class="manage-points-link" [routerLink]="['/my-tours', tour.id, 'key-points']">Add key points</a>
+          <button
+            type="button"
+            class="edit-icon-button"
+            *ngIf="tour.status === 'draft'"
+            (click)="startEdit(tour)"
+            [disabled]="isSavingEdit && editingTourId === tour.id"
+            title="Edit tour"
+            aria-label="Edit tour"
+          >
+            ✎
+          </button>
+          <a
+            class="manage-points-link"
+            *ngIf="tour.status === 'draft'"
+            [routerLink]="['/my-tours', tour.id, 'key-points']"
+          >
+            Add key points
+          </a>
           <button
             type="button"
             *ngFor="let status of getAvailableStatuses(tour.status)"
@@ -33,13 +97,22 @@
       <h2>{{ tour.name }}</h2>
       <p class="tour-description">{{ tour.description }}</p>
 
+      <div class="tag-row" *ngIf="tour.durations.length">
+        <span class="tag" *ngFor="let duration of tour.durations">
+          {{ duration.transportType }}: {{ duration.minutes }} min
+        </span>
+      </div>
+
       <div class="tag-row">
-        <span class="tag" *ngFor="let tag of tour.tags">{{ tag }}</span>
+        <span class="tag" *ngFor="let tag of tour.tags">{{ tag.startsWith('#') ? tag : ('#' + tag) }}</span>
       </div>
 
       <div class="tour-meta">
         <span>Price: {{ tour.price | number:'1.0-0' }}</span>
-        <span>Created: {{ tour.createdAt | date:'medium' }}</span>
+        <span>Distance: {{ tour.distanceInKm | number:'1.0-3' }} km</span>
+        <span *ngIf="selectedStatus === 'draft'">Created: {{ tour.createdAt | date:'medium' }}</span>
+        <span *ngIf="selectedStatus === 'published' && tour.publishedAt">Published: {{ tour.publishedAt | date:'medium' }}</span>
+        <span *ngIf="selectedStatus === 'archived' && tour.archivedAt">Archived: {{ tour.archivedAt | date:'medium' }}</span>
       </div>
 
     </article>

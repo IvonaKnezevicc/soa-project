@@ -4,6 +4,10 @@
       <a class="back-link" routerLink="/my-tours">Back to My tours</a>
       <h1>Key points</h1>
       <p class="tour-name">{{ currentTour.name }}</p>
+      <p class="tour-name">Distance: {{ currentTour.distanceInKm | number:'1.0-3' }} km</p>
+      <p class="page-message" *ngIf="!isDraftTour">
+        Tour is {{ currentTour.status }}. Key points and durations are read-only.
+      </p>
     </div>
   </div>
 
@@ -18,38 +22,38 @@
     </div>
 
     <div class="editor-panel">
-      <h2>{{ selectedKeyPointId ? 'Edit key point' : 'Create key point' }}</h2>
+      <h2>{{ isDraftTour ? (selectedKeyPointId ? 'Edit key point' : 'Create key point') : 'Key points (read-only)' }}</h2>
 
       <form class="point-form" [formGroup]="form" (ngSubmit)="submit()">
         <label>
           <span>Name</span>
-          <input type="text" formControlName="name" placeholder="Point name" />
+          <input type="text" formControlName="name" placeholder="Point name" [disabled]="!isDraftTour" />
         </label>
 
         <label>
           <span>Description</span>
-          <textarea rows="4" formControlName="description" placeholder="Describe this location"></textarea>
+          <textarea rows="4" formControlName="description" placeholder="Describe this location" [disabled]="!isDraftTour"></textarea>
         </label>
 
         <label class="file-label">
           <span>Upload image</span>
-          <input type="file" accept="image/*" (change)="onImageSelected($event)" />
+          <input #imageInput type="file" accept="image/*" (change)="onImageSelected($event)" [disabled]="!isDraftTour" />
           <small *ngIf="form.controls.image.touched && form.controls.image.invalid">Image is required.</small>
         </label>
 
         <div class="coordinate-grid">
           <label>
             <span>Latitude</span>
-            <input type="number" formControlName="latitude" step="0.000001" />
+            <input type="number" formControlName="latitude" step="0.000001" [disabled]="!isDraftTour" />
           </label>
 
           <label>
             <span>Longitude</span>
-            <input type="number" formControlName="longitude" step="0.000001" />
+            <input type="number" formControlName="longitude" step="0.000001" [disabled]="!isDraftTour" />
           </label>
         </div>
 
-        <div class="form-actions">
+        <div class="form-actions" *ngIf="isDraftTour">
           <button type="submit" [disabled]="isSaving">
             {{ isSaving ? 'Saving...' : (selectedKeyPointId ? 'Update key point' : 'Add key point') }}
           </button>
@@ -72,11 +76,39 @@
             <span>{{ keyPoint.latitude }}, {{ keyPoint.longitude }}</span>
           </div>
           <p>{{ keyPoint.description }}</p>
-          <div class="point-actions">
+          <div class="point-actions" *ngIf="isDraftTour">
             <button type="button" class="secondary-button" (click)="editKeyPoint(keyPoint)">Edit</button>
             <button type="button" class="danger-button" (click)="deleteKeyPoint(keyPoint)">Delete</button>
           </div>
         </article>
+      </div>
+
+      <div class="points-list">
+        <div class="points-header">
+          <h3>Durations by transport</h3>
+        </div>
+        <form class="point-form" [formGroup]="durationsForm" (ngSubmit)="saveAndClose()">
+          <div class="coordinate-grid">
+            <label>
+              <span>Walking (min)</span>
+              <input type="number" min="0" formControlName="walkingMinutes" [disabled]="!isDraftTour" />
+            </label>
+            <label>
+              <span>Bicycle (min)</span>
+              <input type="number" min="0" formControlName="bicycleMinutes" [disabled]="!isDraftTour" />
+            </label>
+            <label>
+              <span>Car (min)</span>
+              <input type="number" min="0" formControlName="carMinutes" [disabled]="!isDraftTour" />
+            </label>
+          </div>
+          <div class="form-actions" *ngIf="isDraftTour">
+            <button type="submit" [disabled]="isSavingDurations">
+              {{ isSavingDurations ? 'Saving...' : 'Save' }}
+            </button>
+          </div>
+          <p class="page-message success" *ngIf="durationsMessage">{{ durationsMessage }}</p>
+        </form>
       </div>
     </div>
   </div>

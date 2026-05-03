@@ -52,7 +52,6 @@ export class CreateTourComponent {
       .split(',')
       .map((tag) => tag.trim())
       .filter((tag, index, array) => tag.length > 0 && array.indexOf(tag) === index);
-
     if (tags.length === 0) {
       this.form.controls.tagsInput.markAsTouched();
       this.tagsValidationMessage = 'At least one tag is required.';

@@ -20,8 +20,12 @@ public class Tour {
     private TourDifficulty difficulty;
     private List<String> tags = new ArrayList<>();
     private List<KeyPoint> keyPoints = new ArrayList<>();
+    private List<TourDuration> durations = new ArrayList<>();
     private TourStatus status;
+    private double distanceInKm;
     private BigDecimal price;
+    private Instant publishedAt;
+    private Instant archivedAt;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -97,12 +101,44 @@ public class Tour {
         this.status = status;
     }
 
+    public List<TourDuration> getDurations() {
+        return durations;
+    }
+
+    public void setDurations(List<TourDuration> durations) {
+        this.durations = durations;
+    }
+
+    public double getDistanceInKm() {
+        return distanceInKm;
+    }
+
+    public void setDistanceInKm(double distanceInKm) {
+        this.distanceInKm = distanceInKm;
+    }
+
     public BigDecimal getPrice() {
         return price;
     }
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public Instant getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(Instant publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
+    public Instant getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(Instant archivedAt) {
+        this.archivedAt = archivedAt;
     }
 
     public Instant getCreatedAt() {

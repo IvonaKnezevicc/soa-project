@@ -14,8 +14,13 @@ public class TourResponse {
     private String difficulty;
     private List<String> tags;
     private List<KeyPointResponse> keyPoints;
+    private int keyPointCount;
+    private List<TourDurationResponse> durations;
     private String status;
+    private double distanceInKm;
     private BigDecimal price;
+    private Instant publishedAt;
+    private Instant archivedAt;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -31,8 +36,13 @@ public class TourResponse {
         String difficulty,
         List<String> tags,
         List<KeyPointResponse> keyPoints,
+        int keyPointCount,
+        List<TourDurationResponse> durations,
         String status,
+        double distanceInKm,
         BigDecimal price,
+        Instant publishedAt,
+        Instant archivedAt,
         Instant createdAt,
         Instant updatedAt
     ) {
@@ -44,8 +54,13 @@ public class TourResponse {
         this.difficulty = difficulty;
         this.tags = tags;
         this.keyPoints = keyPoints;
+        this.keyPointCount = keyPointCount;
+        this.durations = durations;
         this.status = status;
+        this.distanceInKm = distanceInKm;
         this.price = price;
+        this.publishedAt = publishedAt;
+        this.archivedAt = archivedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -114,6 +129,22 @@ public class TourResponse {
         this.keyPoints = keyPoints;
     }
 
+    public int getKeyPointCount() {
+        return keyPointCount;
+    }
+
+    public void setKeyPointCount(int keyPointCount) {
+        this.keyPointCount = keyPointCount;
+    }
+
+    public List<TourDurationResponse> getDurations() {
+        return durations;
+    }
+
+    public void setDurations(List<TourDurationResponse> durations) {
+        this.durations = durations;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -122,12 +153,36 @@ public class TourResponse {
         this.status = status;
     }
 
+    public double getDistanceInKm() {
+        return distanceInKm;
+    }
+
+    public void setDistanceInKm(double distanceInKm) {
+        this.distanceInKm = distanceInKm;
+    }
+
     public BigDecimal getPrice() {
         return price;
     }
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public Instant getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(Instant publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
+    public Instant getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(Instant archivedAt) {
+        this.archivedAt = archivedAt;
     }
 
     public Instant getCreatedAt() {
