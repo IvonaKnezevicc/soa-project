@@ -1,0 +1,123 @@
+<section class="explore-tours-page">
+  <div class="page-header">
+    <div>
+      <h1>Tours</h1>
+      <p>Explore available published tours.</p>
+    </div>
+    <span class="total-pill">Total: {{ tours.length }}</span>
+  </div>
+
+  <p class="page-message" *ngIf="isLoading">Loading tours...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <div class="tour-list" *ngIf="!isLoading && !errorMessage && tours.length; else emptyState">
+    <article class="tour-card" *ngFor="let tour of tours">
+      <div class="tour-topline">
+        <span class="difficulty-pill">{{ tour.difficulty }}</span>
+        <span class="key-points-pill">{{ tour.keyPoints.length }} key points</span>
+      </div>
+
+      <h2>{{ tour.name }}</h2>
+      <p class="tour-description">{{ tour.description }}</p>
+
+      <div class="tag-row">
+        <span class="tag" *ngFor="let tag of tour.tags">{{ tag }}</span>
+      </div>
+
+      <div class="tour-meta">
+        <span>Guide: {{ tour.authorUsername }}</span>
+        <span>Price: {{ tour.price | number:'1.0-0' }}</span>
+      </div>
+
+      <div class="review-form" *ngIf="reviewForms[tour.id] as reviewForm">
+        <h3>Leave a review</h3>
+
+        <div class="review-grid">
+          <label>
+            <span>Rating</span>
+            <select
+              [value]="reviewForm.rating"
+              (change)="updateReviewRating(tour.id, $any($event.target).value)"
+            >
+              <option [value]="1">1</option>
+              <option [value]="2">2</option>
+              <option [value]="3">3</option>
+              <option [value]="4">4</option>
+              <option [value]="5">5</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Visited date</span>
+            <input
+              type="date"
+              [value]="reviewForm.visitedAt"
+              (input)="updateReviewVisitedAt(tour.id, $any($event.target).value)"
+            />
+          </label>
+        </div>
+
+        <label>
+          <span>Comment</span>
+          <textarea
+            rows="3"
+            [value]="reviewForm.comment"
+            (input)="updateReviewComment(tour.id, $any($event.target).value)"
+            placeholder="Share your experience"
+          ></textarea>
+        </label>
+
+        <label>
+          <span>Images</span>
+          <input type="file" accept="image/*" multiple (change)="onReviewImagesSelected(tour.id, $event)" />
+        </label>
+
+        <p class="selected-images" *ngIf="reviewForm.imageNames.length">
+          {{ reviewForm.imageNames.length }} image(s) selected
+        </p>
+
+        <p class="review-message success" *ngIf="reviewSuccessMessages[tour.id]">
+          {{ reviewSuccessMessages[tour.id] }}
+        </p>
+        <p class="review-message error" *ngIf="reviewErrorMessages[tour.id]">
+          {{ reviewErrorMessages[tour.id] }}
+        </p>
+
+        <button type="button" [disabled]="reviewSubmitting[tour.id]" (click)="submitReview(tour.id)">
+          {{ reviewSubmitting[tour.id] ? 'Saving...' : 'Submit review' }}
+        </button>
+      </div>
+
+      <div class="reviews-section">
+        <div class="reviews-header">
+          <h3>Reviews</h3>
+          <span>{{ (reviewsByTourId[tour.id] || []).length }}</span>
+        </div>
+
+        <div class="empty-reviews" *ngIf="!(reviewsByTourId[tour.id] || []).length">
+          No reviews yet.
+        </div>
+
+        <article class="review-card" *ngFor="let review of reviewsByTourId[tour.id] || []">
+          <div class="review-card-top">
+            <strong>{{ review.rating }}/5</strong>
+            <span>{{ review.touristUsername }} | {{ review.createdAt | date:'medium' }}</span>
+          </div>
+
+          <p class="visited-date">Visited: {{ review.visitedAt | date:'mediumDate' }}</p>
+          <p class="review-comment">{{ review.comment }}</p>
+
+          <div class="review-images" *ngIf="review.images.length">
+            <img *ngFor="let image of review.images" [src]="image" alt="Review image" />
+          </div>
+        </article>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state" *ngIf="!isLoading && !errorMessage">
+      No published tours found.
+    </div>
+  </ng-template>
+</section>

@@ -1,0 +1,83 @@
+<section class="key-points-page">
+  <div class="page-header" *ngIf="tour as currentTour">
+    <div>
+      <a class="back-link" routerLink="/my-tours">Back to My tours</a>
+      <h1>Key points</h1>
+      <p class="tour-name">{{ currentTour.name }}</p>
+    </div>
+  </div>
+
+  <p class="page-message" *ngIf="isLoading">Loading tour...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="page-message success" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <div class="key-points-layout" *ngIf="tour && !isLoading && !errorMessage">
+    <div class="map-panel">
+      <div id="key-points-map" class="map-shell"></div>
+      <p class="map-hint">{{ mapHintMessage }}</p>
+    </div>
+
+    <div class="editor-panel">
+      <h2>{{ selectedKeyPointId ? 'Edit key point' : 'Create key point' }}</h2>
+
+      <form class="point-form" [formGroup]="form" (ngSubmit)="submit()">
+        <label>
+          <span>Name</span>
+          <input type="text" formControlName="name" placeholder="Point name" />
+        </label>
+
+        <label>
+          <span>Description</span>
+          <textarea rows="4" formControlName="description" placeholder="Describe this location"></textarea>
+        </label>
+
+        <label class="file-label">
+          <span>Upload image</span>
+          <input type="file" accept="image/*" (change)="onImageSelected($event)" />
+          <small *ngIf="form.controls.image.touched && form.controls.image.invalid">Image is required.</small>
+        </label>
+
+        <div class="coordinate-grid">
+          <label>
+            <span>Latitude</span>
+            <input type="number" formControlName="latitude" step="0.000001" />
+          </label>
+
+          <label>
+            <span>Longitude</span>
+            <input type="number" formControlName="longitude" step="0.000001" />
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" [disabled]="isSaving">
+            {{ isSaving ? 'Saving...' : (selectedKeyPointId ? 'Update key point' : 'Add key point') }}
+          </button>
+        </div>
+      </form>
+
+      <div class="points-list">
+        <div class="points-header">
+          <h3>Existing key points</h3>
+          <span>{{ tour.keyPoints.length }}</span>
+        </div>
+
+        <div class="empty-state" *ngIf="!tour.keyPoints.length">
+          No key points yet. Click on the map and create the first one.
+        </div>
+
+        <article class="point-card" *ngFor="let keyPoint of tour.keyPoints">
+          <div class="point-card-top">
+            <strong>{{ keyPoint.order }}. {{ keyPoint.name }}</strong>
+            <span>{{ keyPoint.latitude }}, {{ keyPoint.longitude }}</span>
+          </div>
+          <p>{{ keyPoint.description }}</p>
+          <div class="point-actions">
+            <button type="button" class="secondary-button" (click)="editKeyPoint(keyPoint)">Edit</button>
+            <button type="button" class="danger-button" (click)="deleteKeyPoint(keyPoint)">Delete</button>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
