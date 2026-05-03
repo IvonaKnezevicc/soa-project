@@ -9,6 +9,7 @@ import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CreateTourComponent } from './create-tour/create-tour.component';
+import { ExploreToursComponent } from './explore-tours/explore-tours.component';
 import { HomeComponent } from './home/home.component';
 import { FindUsersComponent } from './find-users/find-users.component';
 import { MyToursComponent } from './my-tours/my-tours.component';
@@ -24,6 +25,7 @@ import { AuthInterceptor } from './services/auth.interceptor';
     LoginComponent,
     RegisterComponent,
     HomeComponent,
+    ExploreToursComponent,
     FindUsersComponent,
     ProfileComponent,
     CreateTourComponent,

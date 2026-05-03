@@ -5,6 +5,7 @@ import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CreateTourComponent } from './create-tour/create-tour.component';
+import { ExploreToursComponent } from './explore-tours/explore-tours.component';
 import { HomeComponent } from './home/home.component';
 import { FindUsersComponent } from './find-users/find-users.component';
 import { MyToursComponent } from './my-tours/my-tours.component';
@@ -27,6 +28,7 @@ const routes: Routes = [
   { path: 'create-tour', component: CreateTourComponent, canActivate: [authGuard, guideGuard] },
   { path: 'my-tours', component: MyToursComponent, canActivate: [authGuard, guideGuard] },
   { path: 'my-tours/:id/key-points', component: TourKeyPointsComponent, canActivate: [authGuard, guideGuard] },
+  { path: 'tours', component: ExploreToursComponent, canActivate: [authGuard, touristGuard] },
   { path: 'position-simulator', component: PositionSimulatorComponent, canActivate: [authGuard, touristGuard] },
   { path: 'dashboard', component: HomeComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'login' }

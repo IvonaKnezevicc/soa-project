@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.soa.tours.dto.CreateKeyPointRequest;
+import com.soa.tours.dto.CreateTourReviewRequest;
 import com.soa.tours.dto.CreateTourRequest;
+import com.soa.tours.dto.TourReviewResponse;
 import com.soa.tours.dto.TourResponse;
 import com.soa.tours.dto.TouristPositionResponse;
 import com.soa.tours.dto.UpdateKeyPointRequest;
@@ -53,6 +55,13 @@ public class TourController {
         return tourService.getToursForCurrentAuthor(currentUser);
     }
 
+    @GetMapping("/published")
+    public List<TourResponse> getPublishedTours(
+        @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
+    ) {
+        return tourService.getPublishedTours(currentUser);
+    }
+
     @GetMapping("/position/me")
     public TouristPositionResponse getMyPosition(
         @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
@@ -83,6 +92,23 @@ public class TourController {
         @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
     ) {
         return tourService.updateTourStatus(tourId, request, currentUser);
+    }
+
+    @GetMapping("/{tourId}/reviews")
+    public List<TourReviewResponse> getTourReviews(
+        @PathVariable String tourId,
+        @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
+    ) {
+        return tourService.getTourReviews(tourId, currentUser);
+    }
+
+    @PostMapping("/{tourId}/reviews")
+    public TourReviewResponse createTourReview(
+        @PathVariable String tourId,
+        @Valid @RequestBody CreateTourReviewRequest request,
+        @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
+    ) {
+        return tourService.createTourReview(tourId, request, currentUser);
     }
 
     @PostMapping("/{tourId}/key-points")

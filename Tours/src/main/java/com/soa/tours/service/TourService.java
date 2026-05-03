@@ -8,9 +8,11 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.soa.tours.dto.CreateTourReviewRequest;
 import com.soa.tours.dto.CreateKeyPointRequest;
 import com.soa.tours.dto.CreateTourRequest;
 import com.soa.tours.dto.KeyPointResponse;
+import com.soa.tours.dto.TourReviewResponse;
 import com.soa.tours.dto.TourResponse;
 import com.soa.tours.dto.TouristPositionResponse;
 import com.soa.tours.dto.UpdateKeyPointRequest;
@@ -19,9 +21,11 @@ import com.soa.tours.dto.UpdateTouristPositionRequest;
 import com.soa.tours.exception.ApiException;
 import com.soa.tours.model.KeyPoint;
 import com.soa.tours.model.Tour;
+import com.soa.tours.model.TourReview;
 import com.soa.tours.model.TourStatus;
 import com.soa.tours.model.TouristPosition;
 import com.soa.tours.repository.TouristPositionRepository;
+import com.soa.tours.repository.TourReviewRepository;
 import com.soa.tours.repository.TourRepository;
 import com.soa.tours.security.CurrentUser;
 
@@ -30,10 +34,16 @@ public class TourService {
 
     private final TourRepository tourRepository;
     private final TouristPositionRepository touristPositionRepository;
+    private final TourReviewRepository tourReviewRepository;
 
-    public TourService(TourRepository tourRepository, TouristPositionRepository touristPositionRepository) {
+    public TourService(
+        TourRepository tourRepository,
+        TouristPositionRepository touristPositionRepository,
+        TourReviewRepository tourReviewRepository
+    ) {
         this.tourRepository = tourRepository;
         this.touristPositionRepository = touristPositionRepository;
+        this.tourReviewRepository = tourReviewRepository;
     }
 
     public TourResponse createTour(CreateTourRequest request, CurrentUser currentUser) {
@@ -68,6 +78,17 @@ public class TourService {
         }
 
         return tourRepository.findByAuthorUsernameOrderByCreatedAtDesc(currentUser.getUsername())
+            .stream()
+            .map(this::toResponse)
+            .toList();
+    }
+
+    public List<TourResponse> getPublishedTours(CurrentUser currentUser) {
+        if (!"tourist".equals(currentUser.getRole())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "only tourist users can view published tours");
+        }
+
+        return tourRepository.findByStatusOrderByCreatedAtDesc(TourStatus.PUBLISHED)
             .stream()
             .map(this::toResponse)
             .toList();
@@ -162,6 +183,48 @@ public class TourService {
         return toTouristPositionResponse(savedPosition);
     }
 
+    public List<TourReviewResponse> getTourReviews(String tourId, CurrentUser currentUser) {
+        findVisibleTour(tourId, currentUser);
+
+        return tourReviewRepository.findByTourIdOrderByCreatedAtDesc(tourId)
+            .stream()
+            .map(this::toTourReviewResponse)
+            .toList();
+    }
+
+    public TourReviewResponse createTourReview(
+        String tourId,
+        CreateTourReviewRequest request,
+        CurrentUser currentUser
+    ) {
+        ensureTourist(currentUser);
+
+        Tour tour = tourRepository.findById(tourId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "tour not found"));
+
+        if (tour.getStatus() != TourStatus.PUBLISHED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "only published tours can be reviewed");
+        }
+
+        if (tourReviewRepository.existsByTourIdAndTouristUsername(tourId, currentUser.getUsername())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "you already reviewed this tour");
+        }
+
+        TourReview review = new TourReview();
+        review.setTourId(tour.getId());
+        review.setTourName(tour.getName());
+        review.setTouristId(currentUser.getUserId());
+        review.setTouristUsername(currentUser.getUsername());
+        review.setRating(request.getRating());
+        review.setComment(request.getComment().trim());
+        review.setVisitedAt(request.getVisitedAt());
+        review.setCreatedAt(Instant.now());
+        review.setImages(normalizeImages(request.getImages()));
+
+        TourReview savedReview = tourReviewRepository.save(review);
+        return toTourReviewResponse(savedReview);
+    }
+
     private Tour findOwnedTour(String tourId, CurrentUser currentUser) {
         if (!"guide".equals(currentUser.getRole())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "only guide users can manage tours");
@@ -175,6 +238,21 @@ public class TourService {
         }
 
         return tour;
+    }
+
+    private Tour findVisibleTour(String tourId, CurrentUser currentUser) {
+        Tour tour = tourRepository.findById(tourId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "tour not found"));
+
+        if (tour.getStatus() == TourStatus.PUBLISHED) {
+            return tour;
+        }
+
+        if ("guide".equals(currentUser.getRole()) && tour.getAuthorUsername().equals(currentUser.getUsername())) {
+            return tour;
+        }
+
+        throw new ApiException(HttpStatus.FORBIDDEN, "tour is not available");
     }
 
     private void ensureTourist(CurrentUser currentUser) {
@@ -204,6 +282,18 @@ public class TourService {
         return image.trim();
     }
 
+    private List<String> normalizeImages(List<String> images) {
+        if (images == null) {
+            return List.of();
+        }
+
+        return images.stream()
+            .map(String::trim)
+            .filter(image -> !image.isEmpty())
+            .distinct()
+            .toList();
+    }
+
     private TourResponse toResponse(Tour tour) {
         return new TourResponse(
             tour.getId(),
@@ -229,6 +319,21 @@ public class TourService {
             position.getLatitude(),
             position.getLongitude(),
             position.getUpdatedAt()
+        );
+    }
+
+    private TourReviewResponse toTourReviewResponse(TourReview review) {
+        return new TourReviewResponse(
+            review.getId(),
+            review.getTourId(),
+            review.getTourName(),
+            review.getTouristId(),
+            review.getTouristUsername(),
+            review.getRating(),
+            review.getComment(),
+            review.getVisitedAt(),
+            review.getCreatedAt(),
+            List.copyOf(review.getImages())
         );
     }
 

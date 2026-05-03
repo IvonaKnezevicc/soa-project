@@ -3,7 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { CreateTourRequest } from '../models/create-tour-request.model';
+import { CreateTourReviewRequest } from '../models/create-tour-review-request.model';
 import { KeyPointPayload } from '../models/key-point-payload.model';
+import { TourReview } from '../models/tour-review.model';
 import { Tour, TourStatus } from '../models/tour.model';
 import { TouristPosition } from '../models/tourist-position.model';
 
@@ -23,6 +25,10 @@ export class ToursService {
     return this.http.get<Tour[]>(`${this.baseUrl}/my`);
   }
 
+  getPublishedTours(): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.baseUrl}/published`);
+  }
+
   getTourById(tourId: string): Observable<Tour> {
     return this.http.get<Tour>(`${this.baseUrl}/${encodeURIComponent(tourId)}`);
   }
@@ -37,6 +43,14 @@ export class ToursService {
 
   updateMyPosition(latitude: number, longitude: number): Observable<TouristPosition> {
     return this.http.put<TouristPosition>(`${this.baseUrl}/position/me`, { latitude, longitude });
+  }
+
+  getTourReviews(tourId: string): Observable<TourReview[]> {
+    return this.http.get<TourReview[]>(`${this.baseUrl}/${encodeURIComponent(tourId)}/reviews`);
+  }
+
+  createTourReview(tourId: string, payload: CreateTourReviewRequest): Observable<TourReview> {
+    return this.http.post<TourReview>(`${this.baseUrl}/${encodeURIComponent(tourId)}/reviews`, payload);
   }
 
   createKeyPoint(tourId: string, payload: KeyPointPayload): Observable<Tour> {
