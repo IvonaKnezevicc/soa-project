@@ -1,15 +1,18 @@
 package com.soa.tours.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.soa.tours.model.TourDifficulty;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public class CreateTourRequest {
+public class UpdateTourRequest {
 
     @NotBlank(message = "name is required")
     @Size(max = 200, message = "name must contain at most 200 characters")
@@ -26,8 +29,10 @@ public class CreateTourRequest {
     @Size(max = 20, message = "at most 20 tags are allowed")
     private List<@NotBlank(message = "tag must not be blank") @Size(max = 50, message = "tag must contain at most 50 characters") String> tags;
 
-    @Size(max = 3, message = "at most three durations are allowed")
-    private List<@NotNull(message = "duration item is required") TourDurationRequest> durations;
+    @NotNull(message = "price is required")
+    @DecimalMin(value = "0.00", message = "price must be greater than or equal to 0")
+    @Digits(integer = 10, fraction = 2, message = "price can have up to 2 decimal places")
+    private BigDecimal price;
 
     public String getName() {
         return name;
@@ -61,11 +66,11 @@ public class CreateTourRequest {
         this.tags = tags;
     }
 
-    public List<TourDurationRequest> getDurations() {
-        return durations;
+    public BigDecimal getPrice() {
+        return price;
     }
 
-    public void setDurations(List<TourDurationRequest> durations) {
-        this.durations = durations;
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 }

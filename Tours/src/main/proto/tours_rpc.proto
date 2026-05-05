@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package toursrpc;
+
+option java_multiple_files = true;
+option java_package = "com.soa.tours.grpc";
+option java_outer_classname = "ToursRpcProto";
+
+service ToursRpcService {
+  rpc GetPublishedTours(GetPublishedToursRequest) returns (GetPublishedToursResponse);
+  rpc PublishTour(PublishTourRequest) returns (PublishTourResponse);
+}
+
+message GetPublishedToursRequest {
+}
+
+message GetPublishedToursResponse {
+  repeated PublishedTour tours = 1;
+}
+
+message PublishedTour {
+  string id = 1;
+  string author_username = 2;
+  string name = 3;
+  string description = 4;
+  string difficulty = 5;
+  repeated string tags = 6;
+  string status = 7;
+  string first_key_point_name = 8;
+  double first_key_point_latitude = 9;
+  double first_key_point_longitude = 10;
+}
+
+message PublishTourRequest {
+  string tour_id = 1;
+  string author_username = 2;
+}
+
+message PublishTourResponse {
+  bool success = 1;
+  string message = 2;
+  string tour_id = 3;
+  string status = 4;
+}

@@ -2,11 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { CreateTourRequest } from '../models/create-tour-request.model';
 import { CreateTourReviewRequest } from '../models/create-tour-review-request.model';
+import { CreateTourRequest } from '../models/create-tour-request.model';
 import { KeyPointPayload } from '../models/key-point-payload.model';
 import { TourReview } from '../models/tour-review.model';
-import { Tour, TourStatus } from '../models/tour.model';
+import { Tour, TourDuration, TourStatus } from '../models/tour.model';
 import { TouristPosition } from '../models/tourist-position.model';
 
 @Injectable({
@@ -35,6 +35,17 @@ export class ToursService {
 
   updateTourStatus(tourId: string, status: TourStatus): Observable<Tour> {
     return this.http.patch<Tour>(`${this.baseUrl}/${encodeURIComponent(tourId)}/status`, { status });
+  }
+
+  updateTour(
+    tourId: string,
+    payload: CreateTourRequest & { price: number }
+  ): Observable<Tour> {
+    return this.http.put<Tour>(`${this.baseUrl}/${encodeURIComponent(tourId)}`, payload);
+  }
+
+  updateTourDurations(tourId: string, durations: TourDuration[]): Observable<Tour> {
+    return this.http.put<Tour>(`${this.baseUrl}/${encodeURIComponent(tourId)}/durations`, { durations });
   }
 
   getMyPosition(): Observable<TouristPosition> {

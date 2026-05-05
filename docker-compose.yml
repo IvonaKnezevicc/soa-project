@@ -167,6 +167,7 @@ services:
       - tours
     ports:
       - "4200:80"
+      - "50051:50051"
 
 volumes:
   stakeholders_neo4j_data:

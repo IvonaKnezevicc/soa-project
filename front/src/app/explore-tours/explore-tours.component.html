@@ -14,20 +14,28 @@
     <article class="tour-card" *ngFor="let tour of tours">
       <div class="tour-topline">
         <span class="difficulty-pill">{{ tour.difficulty }}</span>
-        <span class="key-points-pill">{{ tour.keyPoints.length }} key points</span>
+        <span class="key-points-pill">{{ tour.keyPointCount }} key points</span>
       </div>
 
       <h2>{{ tour.name }}</h2>
       <p class="tour-description">{{ tour.description }}</p>
 
-      <div class="tag-row">
-        <span class="tag" *ngFor="let tag of tour.tags">{{ tag }}</span>
-      </div>
-
       <div class="tour-meta">
         <span>Guide: {{ tour.authorUsername }}</span>
+        <span>Distance: {{ tour.distanceInKm | number:'1.0-3' }} km</span>
         <span>Price: {{ tour.price | number:'1.0-0' }}</span>
       </div>
+      <div class="tag-row" *ngIf="tour.durations.length">
+        <span class="tag" *ngFor="let duration of tour.durations">
+          {{ duration.transportType }}: {{ duration.minutes }} min
+        </span>
+      </div>
+      <div class="tag-row">
+        <span class="tag" *ngFor="let tag of tour.tags">{{ tag.startsWith('#') ? tag : ('#' + tag) }}</span>
+      </div>
+      <p class="tour-description" *ngIf="tour.keyPoints.length">
+        Start point: {{ tour.keyPoints[0].name }} ({{ tour.keyPoints[0].latitude }}, {{ tour.keyPoints[0].longitude }})
+      </p>
 
       <div class="review-form" *ngIf="reviewForms[tour.id] as reviewForm">
         <h3>Leave a review</h3>
