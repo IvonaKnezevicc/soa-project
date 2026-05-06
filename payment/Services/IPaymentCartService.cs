@@ -8,5 +8,4 @@ public interface IPaymentCartService
     Task<ShoppingCartResponse> AddTourToCartAsync(HttpContext context, AddCartItemRequest request, CancellationToken cancellationToken);
     Task<ShoppingCartResponse> RemoveTourFromCartAsync(HttpContext context, string tourId, CancellationToken cancellationToken);
     Task<CheckoutResponse> CheckoutAsync(HttpContext context, CancellationToken cancellationToken);
-    Task<InternalPurchasedToursResponse> GetPurchasedTourIdsByTouristAsync(string touristUsername, CancellationToken cancellationToken);
 }

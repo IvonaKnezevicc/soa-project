@@ -1,3 +1,4 @@
+using PaymentService.Clients;
 using PaymentService.Common;
 using PaymentService.Dtos;
 using PaymentService.Models;
@@ -5,7 +6,9 @@ using PaymentService.Repositories;
 
 namespace PaymentService.Services;
 
-public class WalletService(IPaymentRepository paymentRepository) : IWalletService
+public class WalletService(
+    IPaymentRepository paymentRepository,
+    IStakeholdersClient stakeholdersClient) : IWalletService
 {
     private const decimal InitialWalletBalance = 2000.00m;
 
@@ -34,6 +37,28 @@ public class WalletService(IPaymentRepository paymentRepository) : IWalletServic
         };
 
         await paymentRepository.CreateWalletAsync(wallet, cancellationToken);
+        return ToResponse(wallet);
+    }
+
+    public async Task<WalletResponse> GetMyWalletAsync(HttpContext context, CancellationToken cancellationToken)
+    {
+        var identity = await stakeholdersClient.ResolveIdentityAsync(context, cancellationToken);
+        if (identity is null)
+        {
+            throw new ApiException(StatusCodes.Status401Unauthorized, "unauthorized");
+        }
+
+        if (!string.Equals(identity.Role, "tourist", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ApiException(StatusCodes.Status403Forbidden, "only tourist users can access wallet");
+        }
+
+        var wallet = await paymentRepository.GetWalletByTouristIdAsync(identity.UserId, cancellationToken);
+        if (wallet is null)
+        {
+            throw new ApiException(StatusCodes.Status404NotFound, "wallet not found");
+        }
+
         return ToResponse(wallet);
     }
 

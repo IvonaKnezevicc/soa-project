@@ -6,6 +6,7 @@ import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CreateTourComponent } from './create-tour/create-tour.component';
 import { ExploreToursComponent } from './explore-tours/explore-tours.component';
+import { FindToursComponent } from './find-tours/find-tours.component';
 import { HomeComponent } from './home/home.component';
 import { FindUsersComponent } from './find-users/find-users.component';
 import { MyToursComponent } from './my-tours/my-tours.component';
@@ -29,6 +30,7 @@ const routes: Routes = [
   { path: 'create-tour', component: CreateTourComponent, canActivate: [authGuard, guideGuard] },
   { path: 'my-tours', component: MyToursComponent, canActivate: [authGuard, guideGuard] },
   { path: 'my-tours/:id/key-points', component: TourKeyPointsComponent, canActivate: [authGuard, guideGuard] },
+  { path: 'find-tours', component: FindToursComponent, canActivate: [authGuard, touristGuard] },
   { path: 'tours', component: ExploreToursComponent, canActivate: [authGuard, touristGuard] },
   { path: 'shopping-cart', component: ShoppingCartComponent, canActivate: [authGuard, touristGuard] },
   { path: 'position-simulator', component: PositionSimulatorComponent, canActivate: [authGuard, touristGuard] },

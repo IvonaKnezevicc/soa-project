@@ -16,8 +16,10 @@ import org.springframework.stereotype.Service;
 
 import com.soa.tours.dto.CreateTourReviewRequest;
 import com.soa.tours.dto.CreateKeyPointRequest;
+import com.soa.tours.dto.CreatePurchasedToursRequest;
 import com.soa.tours.dto.CreateTourRequest;
 import com.soa.tours.dto.KeyPointResponse;
+import com.soa.tours.dto.PurchasedTourIdsResponse;
 import com.soa.tours.dto.TourDurationResponse;
 import com.soa.tours.dto.TourReviewResponse;
 import com.soa.tours.dto.TourResponse;
@@ -29,12 +31,14 @@ import com.soa.tours.dto.UpdateTourStatusRequest;
 import com.soa.tours.dto.UpdateTouristPositionRequest;
 import com.soa.tours.exception.ApiException;
 import com.soa.tours.model.KeyPoint;
+import com.soa.tours.model.PurchasedTour;
 import com.soa.tours.model.Tour;
 import com.soa.tours.model.TourDuration;
 import com.soa.tours.model.TourReview;
 import com.soa.tours.model.TourStatus;
 import com.soa.tours.model.TouristPosition;
 import com.soa.tours.model.TransportType;
+import com.soa.tours.repository.PurchasedTourRepository;
 import com.soa.tours.repository.TouristPositionRepository;
 import com.soa.tours.repository.TourReviewRepository;
 import com.soa.tours.repository.TourRepository;
@@ -46,18 +50,18 @@ public class TourService {
     private final TourRepository tourRepository;
     private final TouristPositionRepository touristPositionRepository;
     private final TourReviewRepository tourReviewRepository;
-    private final PaymentServiceClient paymentServiceClient;
+    private final PurchasedTourRepository purchasedTourRepository;
 
     public TourService(
         TourRepository tourRepository,
         TouristPositionRepository touristPositionRepository,
         TourReviewRepository tourReviewRepository,
-        PaymentServiceClient paymentServiceClient
+        PurchasedTourRepository purchasedTourRepository
     ) {
         this.tourRepository = tourRepository;
         this.touristPositionRepository = touristPositionRepository;
         this.tourReviewRepository = tourReviewRepository;
-        this.paymentServiceClient = paymentServiceClient;
+        this.purchasedTourRepository = purchasedTourRepository;
     }
 
     public TourResponse createTour(CreateTourRequest request, CurrentUser currentUser) {
@@ -104,7 +108,10 @@ public class TourService {
             throw new ApiException(HttpStatus.FORBIDDEN, "only tourist users can view published tours");
         }
 
-        Set<String> purchasedTourIds = paymentServiceClient.getPurchasedTourIdsForTourist(currentUser.getUsername());
+        Set<String> purchasedTourIds = purchasedTourRepository.findByTouristId(currentUser.getUserId())
+            .stream()
+            .map(PurchasedTour::getTourId)
+            .collect(Collectors.toSet());
 
         return tourRepository.findByStatusOrderByCreatedAtDesc(TourStatus.PUBLISHED)
             .stream()
@@ -122,6 +129,57 @@ public class TourService {
             tour.getPrice() == null ? BigDecimal.ZERO : tour.getPrice(),
             tour.getStatus() == null ? TourStatus.DRAFT.getValue() : tour.getStatus().getValue()
         );
+    }
+
+    public PurchasedTourIdsResponse getPurchasedTourIds(String touristId) {
+        touristId = touristId == null ? "" : touristId.trim();
+        if (touristId.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "touristId is required");
+        }
+
+        List<String> tourIds = purchasedTourRepository.findByTouristId(touristId)
+            .stream()
+            .map(PurchasedTour::getTourId)
+            .distinct()
+            .toList();
+
+        return new PurchasedTourIdsResponse(touristId, tourIds);
+    }
+
+    public PurchasedTourIdsResponse createPurchasedTours(CreatePurchasedToursRequest request) {
+        String touristId = normalizeTouristId(request.getTouristId());
+        List<String> requestedTourIds = normalizeTourIds(request.getTourIds());
+        validateToursAvailableForPurchase(requestedTourIds);
+
+        Set<String> existingTourIds = purchasedTourRepository.findByTouristIdAndTourIdIn(touristId, requestedTourIds)
+            .stream()
+            .map(PurchasedTour::getTourId)
+            .collect(Collectors.toSet());
+
+        Instant purchasedAt = Instant.now();
+        List<PurchasedTour> newPurchases = requestedTourIds.stream()
+            .filter(tourId -> !existingTourIds.contains(tourId))
+            .map(tourId -> {
+                PurchasedTour purchasedTour = new PurchasedTour();
+                purchasedTour.setTouristId(touristId);
+                purchasedTour.setTourId(tourId);
+                purchasedTour.setPurchasedAt(purchasedAt);
+                return purchasedTour;
+            })
+            .toList();
+
+        if (!newPurchases.isEmpty()) {
+            purchasedTourRepository.saveAll(newPurchases);
+        }
+
+        return new PurchasedTourIdsResponse(touristId, requestedTourIds);
+    }
+
+    public PurchasedTourIdsResponse rollbackPurchasedTours(CreatePurchasedToursRequest request) {
+        String touristId = normalizeTouristId(request.getTouristId());
+        List<String> requestedTourIds = normalizeTourIds(request.getTourIds());
+        purchasedTourRepository.deleteByTouristIdAndTourIdIn(touristId, requestedTourIds);
+        return new PurchasedTourIdsResponse(touristId, requestedTourIds);
     }
 
     public TourResponse getTourById(String tourId, CurrentUser currentUser) {
@@ -384,6 +442,49 @@ public class TourService {
         if (tour.getDurations() == null || tour.getDurations().isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "at least one duration by transport type is required");
         }
+    }
+
+    private void validateToursAvailableForPurchase(List<String> tourIds) {
+        List<Tour> tours = tourRepository.findAllById(tourIds);
+        if (tours.size() != tourIds.size()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "one or more tours no longer exist");
+        }
+
+        Map<String, Tour> toursById = tours.stream()
+            .collect(Collectors.toMap(Tour::getId, Function.identity()));
+
+        for (String tourId : tourIds) {
+            Tour tour = toursById.get(tourId);
+            if (tour == null || tour.getStatus() != TourStatus.PUBLISHED) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "one or more tours are no longer available for purchase");
+            }
+        }
+    }
+
+    private String normalizeTouristId(String touristId) {
+        touristId = touristId == null ? "" : touristId.trim();
+        if (touristId.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "touristId is required");
+        }
+        return touristId;
+    }
+
+    private List<String> normalizeTourIds(List<String> tourIds) {
+        if (tourIds == null || tourIds.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "tourIds are required");
+        }
+
+        List<String> normalizedTourIds = tourIds.stream()
+            .map(tourId -> tourId == null ? "" : tourId.trim())
+            .filter(tourId -> !tourId.isEmpty())
+            .distinct()
+            .toList();
+
+        if (normalizedTourIds.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "tourIds are required");
+        }
+
+        return normalizedTourIds;
     }
 
     private List<TourDuration> normalizeDurations(List<com.soa.tours.dto.TourDurationRequest> requestDurations) {

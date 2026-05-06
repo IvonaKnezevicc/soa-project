@@ -31,7 +31,8 @@ public class PaymentCartService(
             throw new ApiException(StatusCodes.Status400BadRequest, "tourId is required");
         }
 
-        if (await paymentRepository.HasPurchasedTourAsync(identity.UserId, tourId, cancellationToken))
+        var purchasedTourIds = await toursClient.GetPurchasedTourIdsAsync(identity.UserId, cancellationToken);
+        if (purchasedTourIds.Contains(tourId))
         {
             throw new ApiException(StatusCodes.Status400BadRequest, "tour is already purchased");
         }
@@ -104,6 +105,8 @@ public class PaymentCartService(
             throw new ApiException(StatusCodes.Status400BadRequest, "shopping cart is empty");
         }
 
+        var purchasedTourIds = await toursClient.GetPurchasedTourIdsAsync(identity.UserId, cancellationToken);
+
         foreach (var item in cart.Items)
         {
             var tour = await toursClient.GetTourForPurchaseAsync(item.TourId, cancellationToken);
@@ -117,33 +120,76 @@ public class PaymentCartService(
                 throw new ApiException(StatusCodes.Status400BadRequest, $"tour '{tour.Name}' is no longer available for purchase");
             }
 
-            if (await paymentRepository.HasPurchasedTourAsync(identity.UserId, item.TourId, cancellationToken))
+            if (purchasedTourIds.Contains(item.TourId))
             {
                 throw new ApiException(StatusCodes.Status400BadRequest, $"tour '{tour.Name}' is already purchased");
             }
         }
 
+        var totalPrice = cart.Items.Sum(item => item.Price);
+        var purchasedItemCount = cart.Items.Count;
+        var wallet = await paymentRepository.GetWalletByTouristIdAsync(identity.UserId, cancellationToken);
+        if (wallet is null)
+        {
+            throw new ApiException(StatusCodes.Status400BadRequest, "wallet not found");
+        }
+        if (wallet.Balance < totalPrice)
+        {
+            throw new ApiException(StatusCodes.Status400BadRequest, "insufficient wallet balance");
+        }
+
+        var purchasedAt = DateTime.UtcNow;
+        var cartTourIds = cart.Items.Select(item => item.TourId).Distinct().ToArray();
+
         try
         {
-            var result = await paymentRepository.CheckoutAsync(cart, identity, cancellationToken);
-            return new CheckoutResponse(result.PurchasedItemCount, result.PurchasedAt);
+            wallet.Balance -= totalPrice;
+            wallet.UpdatedAt = purchasedAt;
+            await paymentRepository.SaveChangesAsync(cancellationToken);
+
+            try
+            {
+                await toursClient.CreatePurchasedToursAsync(identity.UserId, cartTourIds, cancellationToken);
+            }
+            catch
+            {
+                wallet.Balance += totalPrice;
+                wallet.UpdatedAt = DateTime.UtcNow;
+                await paymentRepository.SaveChangesAsync(cancellationToken);
+                throw new ApiException(StatusCodes.Status500InternalServerError, "checkout failed while creating purchased tours");
+            }
+
+            try
+            {
+                await paymentRepository.FinalizeCheckoutAsync(cart, purchasedAt, cancellationToken);
+            }
+            catch
+            {
+                try
+                {
+                    await toursClient.RollbackPurchasedToursAsync(identity.UserId, cartTourIds, cancellationToken);
+                }
+                catch
+                {
+                    throw new ApiException(StatusCodes.Status500InternalServerError, "checkout compensation failed after purchase creation");
+                }
+
+                wallet.Balance += totalPrice;
+                wallet.UpdatedAt = DateTime.UtcNow;
+                await paymentRepository.SaveChangesAsync(cancellationToken);
+                throw new ApiException(StatusCodes.Status500InternalServerError, "checkout failed after purchase creation");
+            }
+
+            return new CheckoutResponse(purchasedItemCount, purchasedAt);
+        }
+        catch (ApiException)
+        {
+            throw;
         }
         catch
         {
             throw new ApiException(StatusCodes.Status500InternalServerError, "checkout failed");
         }
-    }
-
-    public async Task<InternalPurchasedToursResponse> GetPurchasedTourIdsByTouristAsync(string touristUsername, CancellationToken cancellationToken)
-    {
-        touristUsername = touristUsername.Trim();
-        if (string.IsNullOrWhiteSpace(touristUsername))
-        {
-            throw new ApiException(StatusCodes.Status400BadRequest, "touristUsername is required");
-        }
-
-        var tourIds = await paymentRepository.GetPurchasedTourIdsByUsernameAsync(touristUsername, cancellationToken);
-        return new InternalPurchasedToursResponse(tourIds);
     }
 
     private async Task<AuthenticatedIdentity> RequireTouristIdentityAsync(HttpContext context, CancellationToken cancellationToken)

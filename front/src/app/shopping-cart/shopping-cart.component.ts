@@ -59,6 +59,7 @@ export class ShoppingCartComponent implements OnInit {
     this.paymentService.checkout().subscribe({
       next: () => {
         this.successMessage = 'Checkout completed. Purchased tours are now unlocked.';
+        this.paymentService.refreshWallet();
         this.isCheckingOut = false;
         this.loadCart();
         window.setTimeout(() => this.router.navigate(['/tours']), 700);

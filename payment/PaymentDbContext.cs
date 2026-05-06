@@ -8,7 +8,6 @@ public class PaymentDbContext(DbContextOptions<PaymentDbContext> options) : DbCo
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<ShoppingCart> ShoppingCarts => Set<ShoppingCart>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
-    public DbSet<TourPurchaseToken> TourPurchaseTokens => Set<TourPurchaseToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,19 +41,6 @@ public class PaymentDbContext(DbContextOptions<PaymentDbContext> options) : DbCo
             entity.Property(item => item.TourName).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Price).HasPrecision(10, 2);
             entity.HasIndex(item => new { item.ShoppingCartId, item.TourId }).IsUnique();
-        });
-
-        modelBuilder.Entity<TourPurchaseToken>(entity =>
-        {
-            entity.ToTable("tour_purchase_tokens");
-            entity.HasKey(item => item.Id);
-            entity.Property(item => item.TouristId).HasMaxLength(100).IsRequired();
-            entity.Property(item => item.TouristUsername).HasMaxLength(100).IsRequired();
-            entity.Property(item => item.TourId).HasMaxLength(100).IsRequired();
-            entity.Property(item => item.TourName).HasMaxLength(200).IsRequired();
-            entity.Property(item => item.Price).HasPrecision(10, 2);
-            entity.HasIndex(item => new { item.TouristId, item.TourId }).IsUnique();
-            entity.HasIndex(item => item.TouristUsername);
         });
     }
 }

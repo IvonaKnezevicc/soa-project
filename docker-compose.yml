@@ -183,6 +183,7 @@ services:
       POSTGRES_CONNECTION_STRING: "Host=payment-postgres;Port=5432;Database=paymentdb;Username=postgres;Password=postgres"
       STAKEHOLDERS_SERVICE_URL: "http://stakeholders:8080"
       TOURS_SERVICE_URL: "http://tours:8083"
+      TOURS_GRPC_URL: "http://tours:9093"
       CORS_ALLOWED_ORIGINS: "http://localhost:4200"
 
   front:

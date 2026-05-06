@@ -1,0 +1,64 @@
+<section class="find-tours-page">
+  <div class="page-header">
+    <div>
+      <h1>Find-Tours</h1>
+      <p>Browse published tours you have not purchased yet.</p>
+    </div>
+    <span class="total-pill">Available: {{ tours.length }}</span>
+  </div>
+
+  <p class="page-message" *ngIf="isLoading">Loading tours...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <div class="tour-grid" *ngIf="!isLoading && !errorMessage && tours.length; else emptyState">
+    <article class="tour-card" *ngFor="let tour of tours">
+      <div class="tour-image-wrap">
+        <img *ngIf="getFirstPointImage(tour); else imageFallback" [src]="getFirstPointImage(tour)" [alt]="tour.name" />
+        <ng-template #imageFallback>
+          <div class="image-fallback">No image</div>
+        </ng-template>
+      </div>
+
+      <div class="tour-content">
+        <div class="tour-topline">
+          <span class="difficulty-pill">{{ tour.difficulty }}</span>
+          <span class="price-pill">{{ tour.price | number:'1.2-2' }} $</span>
+        </div>
+
+        <h2>{{ tour.name }}</h2>
+        <p class="tour-description">{{ tour.description }}</p>
+
+        <div class="tour-meta">
+          <span>Length: {{ tour.distanceInKm | number:'1.0-3' }} km</span>
+        </div>
+
+        <div class="duration-row" *ngIf="tour.durations.length">
+          <span class="duration-pill" *ngFor="let duration of tour.durations">
+            {{ formatDurationLabel(duration.transportType) }}: {{ duration.minutes }} min
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="add-button"
+          [disabled]="cartTourIds[tour.id] || addToCartSubmitting[tour.id]"
+          (click)="addToCart(tour.id)"
+        >
+          {{
+            cartTourIds[tour.id]
+              ? 'Already in cart'
+              : (addToCartSubmitting[tour.id] ? 'Adding...' : 'Add to cart')
+          }}
+        </button>
+
+        <p class="action-message" *ngIf="addToCartMessages[tour.id]">{{ addToCartMessages[tour.id] }}</p>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state" *ngIf="!isLoading && !errorMessage">
+      No tours available for purchase.
+    </div>
+  </ng-template>
+</section>

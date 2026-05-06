@@ -49,21 +49,6 @@ public class PaymentRepository(PaymentDbContext dbContext) : IPaymentRepository
             .SingleOrDefaultAsync(item => item.TouristId == touristId, cancellationToken);
     }
 
-    public async Task<bool> HasPurchasedTourAsync(string touristId, string tourId, CancellationToken cancellationToken)
-    {
-        return await dbContext.TourPurchaseTokens
-            .AnyAsync(item => item.TouristId == touristId && item.TourId == tourId, cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<string>> GetPurchasedTourIdsByUsernameAsync(string touristUsername, CancellationToken cancellationToken)
-    {
-        return await dbContext.TourPurchaseTokens
-            .Where(item => item.TouristUsername == touristUsername)
-            .Select(item => item.TourId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-    }
-
     public void AddOrderItem(ShoppingCart cart, OrderItem orderItem)
     {
         dbContext.OrderItems.Add(orderItem);
@@ -81,33 +66,18 @@ public class PaymentRepository(PaymentDbContext dbContext) : IPaymentRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<CheckoutResult> CheckoutAsync(ShoppingCart cart, AuthenticatedIdentity identity, CancellationToken cancellationToken)
+    public async Task FinalizeCheckoutAsync(ShoppingCart cart, DateTime checkedOutAt, CancellationToken cancellationToken)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            var purchasedAt = DateTime.UtcNow;
-            var tokens = cart.Items.Select(item => new TourPurchaseToken
-            {
-                Id = Guid.NewGuid(),
-                TouristId = identity.UserId,
-                TouristUsername = identity.Username,
-                TourId = item.TourId,
-                TourName = item.TourName,
-                Price = item.Price,
-                PurchasedAt = purchasedAt
-            }).ToList();
-
-            dbContext.TourPurchaseTokens.AddRange(tokens);
             dbContext.OrderItems.RemoveRange(cart.Items);
             cart.Items.Clear();
-            cart.UpdatedAt = purchasedAt;
+            cart.UpdatedAt = checkedOutAt;
 
             await dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-
-            return new CheckoutResult(tokens.Count, purchasedAt);
         }
         catch
         {
