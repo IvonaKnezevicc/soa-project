@@ -5,6 +5,8 @@ namespace PaymentService.Repositories;
 
 public interface IPaymentRepository
 {
+    Task<Wallet?> GetWalletByTouristIdAsync(string touristId, CancellationToken cancellationToken);
+    Task CreateWalletAsync(Wallet wallet, CancellationToken cancellationToken);
     Task<ShoppingCart> GetOrCreateCartAsync(AuthenticatedIdentity identity, CancellationToken cancellationToken);
     Task<ShoppingCart?> GetCartByTouristIdAsync(string touristId, CancellationToken cancellationToken);
     Task<bool> HasPurchasedTourAsync(string touristId, string tourId, CancellationToken cancellationToken);

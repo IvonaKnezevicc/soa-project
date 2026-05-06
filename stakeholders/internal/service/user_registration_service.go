@@ -24,10 +24,14 @@ type UserRegistrationService interface {
 
 type userRegistrationService struct {
 	userRepository repository.UserRepository
+	paymentClient  PaymentClient
 }
 
-func NewUserRegistrationService(userRepository repository.UserRepository) UserRegistrationService {
-	return &userRegistrationService{userRepository: userRepository}
+func NewUserRegistrationService(userRepository repository.UserRepository, paymentClient PaymentClient) UserRegistrationService {
+	return &userRegistrationService{
+		userRepository: userRepository,
+		paymentClient:  paymentClient,
+	}
 }
 
 func (s *userRegistrationService) RegisterUser(ctx context.Context, request dto.UserRegistrationRequest) (*dto.UserRegistrationResponse, error) {
@@ -65,6 +69,15 @@ func (s *userRegistrationService) RegisterUser(ctx context.Context, request dto.
 
 	if err := s.userRepository.Create(ctx, user); err != nil {
 		return nil, err
+	}
+
+	if user.Role == domain.RoleTourist {
+		if err := s.paymentClient.CreateWallet(ctx, user.ID); err != nil {
+			if rollbackErr := s.userRepository.DeleteByID(ctx, user.ID); rollbackErr != nil {
+				return nil, fmt.Errorf("wallet creation failed: %w; rollback failed: %v", err, rollbackErr)
+			}
+			return nil, fmt.Errorf("wallet creation failed: %w", err)
+		}
 	}
 
 	return &dto.UserRegistrationResponse{

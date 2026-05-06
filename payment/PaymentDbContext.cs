@@ -5,12 +5,22 @@ namespace PaymentService;
 
 public class PaymentDbContext(DbContextOptions<PaymentDbContext> options) : DbContext(options)
 {
+    public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<ShoppingCart> ShoppingCarts => Set<ShoppingCart>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<TourPurchaseToken> TourPurchaseTokens => Set<TourPurchaseToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Wallet>(entity =>
+        {
+            entity.ToTable("wallets");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TouristId).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Balance).HasPrecision(18, 2);
+            entity.HasIndex(item => item.TouristId).IsUnique();
+        });
+
         modelBuilder.Entity<ShoppingCart>(entity =>
         {
             entity.ToTable("shopping_carts");

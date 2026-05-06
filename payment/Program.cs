@@ -18,6 +18,7 @@ builder.Services.AddHttpClient<IStakeholdersClient, StakeholdersClient>(client =
 builder.Services.AddHttpClient<IToursClient, ToursClient>(client => client.Timeout = TimeSpan.FromSeconds(8));
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentCartService, PaymentCartService>();
+builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -40,6 +41,16 @@ await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+    await dbContext.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS wallets (
+            "Id" uuid NOT NULL PRIMARY KEY,
+            "TouristId" character varying(100) NOT NULL,
+            "Balance" numeric(18,2) NOT NULL,
+            "CreatedAt" timestamp with time zone NOT NULL,
+            "UpdatedAt" timestamp with time zone NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_wallets_TouristId" ON wallets ("TouristId");
+        """);
 }
 
 await app.RunAsync();

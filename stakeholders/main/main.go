@@ -40,7 +40,8 @@ func main() {
 	}
 
 	jwtService := service.NewJWTService(cfg)
-	registrationService := service.NewUserRegistrationService(userRepository)
+	paymentClient := service.NewPaymentClient(cfg.PaymentServiceURL)
+	registrationService := service.NewUserRegistrationService(userRepository, paymentClient)
 	loginService := service.NewUserLoginService(userRepository, jwtService)
 	userListService := service.NewUserListService(userRepository)
 	userBlockService := service.NewUserBlockService(userRepository)

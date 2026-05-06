@@ -6,6 +6,18 @@ namespace PaymentService.Repositories;
 
 public class PaymentRepository(PaymentDbContext dbContext) : IPaymentRepository
 {
+    public async Task<Wallet?> GetWalletByTouristIdAsync(string touristId, CancellationToken cancellationToken)
+    {
+        return await dbContext.Wallets
+            .SingleOrDefaultAsync(item => item.TouristId == touristId, cancellationToken);
+    }
+
+    public async Task CreateWalletAsync(Wallet wallet, CancellationToken cancellationToken)
+    {
+        dbContext.Wallets.Add(wallet);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<ShoppingCart> GetOrCreateCartAsync(AuthenticatedIdentity identity, CancellationToken cancellationToken)
     {
         var cart = await GetCartByTouristIdAsync(identity.UserId, cancellationToken);
