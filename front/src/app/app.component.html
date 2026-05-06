@@ -47,6 +47,7 @@
         <a *ngIf="currentUser.role === 'guide'" routerLink="/create-tour" routerLinkActive="active">Create tour</a>
         <a *ngIf="currentUser.role === 'guide'" routerLink="/my-tours" routerLinkActive="active">My tours</a>
         <a *ngIf="currentUser.role === 'tourist'" routerLink="/find-tours" routerLinkActive="active">Find-Tours</a>
+        <a *ngIf="currentUser.role === 'tourist'" routerLink="/tourist/my-tours" routerLinkActive="active">My Tours</a>
         <a *ngIf="currentUser.role === 'tourist'" routerLink="/tours" routerLinkActive="active">Tours</a>
         <a *ngIf="currentUser.role === 'tourist'" routerLink="/shopping-cart" routerLinkActive="active">Shopping cart</a>
         <a *ngIf="currentUser.role === 'tourist'" routerLink="/position-simulator" routerLinkActive="active">Position simulator</a>

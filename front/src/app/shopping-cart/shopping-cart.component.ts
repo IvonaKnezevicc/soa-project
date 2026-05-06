@@ -62,7 +62,7 @@ export class ShoppingCartComponent implements OnInit {
         this.paymentService.refreshWallet();
         this.isCheckingOut = false;
         this.loadCart();
-        window.setTimeout(() => this.router.navigate(['/tours']), 700);
+        window.setTimeout(() => this.router.navigate(['/tourist/my-tours']), 700);
       },
       error: (error) => {
         this.errorMessage = error?.error?.message ?? 'Checkout failed.';

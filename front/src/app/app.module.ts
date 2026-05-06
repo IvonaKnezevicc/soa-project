@@ -17,6 +17,8 @@ import { MyToursComponent } from './my-tours/my-tours.component';
 import { PositionSimulatorComponent } from './position-simulator/position-simulator.component';
 import { ProfileComponent } from './profile/profile.component';
 import { ShoppingCartComponent } from './shopping-cart/shopping-cart.component';
+import { TourDetailsComponent } from './tour-details/tour-details.component';
+import { TouristMyToursComponent } from './tourist-my-tours/tourist-my-tours.component';
 import { TourKeyPointsComponent } from './tour-key-points/tour-key-points.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 
@@ -35,7 +37,9 @@ import { AuthInterceptor } from './services/auth.interceptor';
     MyToursComponent,
     PositionSimulatorComponent,
     TourKeyPointsComponent,
-    ShoppingCartComponent
+    ShoppingCartComponent,
+    TouristMyToursComponent,
+    TourDetailsComponent
   ],
   imports: [
     BrowserModule,

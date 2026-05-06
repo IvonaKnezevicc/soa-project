@@ -183,8 +183,22 @@ public class TourService {
     }
 
     public TourResponse getTourById(String tourId, CurrentUser currentUser) {
-        Tour tour = findOwnedTour(tourId, currentUser);
-        return toResponse(tour);
+        if ("guide".equals(currentUser.getRole())) {
+            Tour tour = findOwnedTour(tourId, currentUser);
+            return toResponse(tour);
+        }
+
+        if ("tourist".equals(currentUser.getRole())) {
+            Tour tour = findVisibleTour(tourId, currentUser);
+            boolean purchasedByCurrentUser = purchasedTourRepository.findByTouristIdAndTourIdIn(
+                currentUser.getUserId(),
+                List.of(tourId)
+            ).stream().anyMatch(item -> tourId.equals(item.getTourId()));
+
+            return toTouristResponse(tour, purchasedByCurrentUser);
+        }
+
+        throw new ApiException(HttpStatus.FORBIDDEN, "user role is not allowed to view this tour");
     }
 
     public TourResponse updateTourStatus(String tourId, UpdateTourStatusRequest request, CurrentUser currentUser) {

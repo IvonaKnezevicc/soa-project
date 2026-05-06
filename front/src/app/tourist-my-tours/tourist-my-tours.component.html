@@ -1,13 +1,13 @@
-<section class="find-tours-page">
+<section class="tourist-my-tours-page">
   <div class="page-header">
     <div>
-      <h1>Find-Tours</h1>
-      <p>Browse published tours you have not purchased yet.</p>
+      <h1>My Tours</h1>
+      <p>View all tours you already purchased.</p>
     </div>
-    <span class="total-pill">Available: {{ tours.length }}</span>
+    <span class="total-pill">Purchased: {{ tours.length }}</span>
   </div>
 
-  <p class="page-message" *ngIf="isLoading">Loading tours...</p>
+  <p class="page-message" *ngIf="isLoading">Loading purchased tours...</p>
   <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
   <div class="tour-grid" *ngIf="!isLoading && !errorMessage && tours.length; else emptyState">
@@ -30,6 +30,7 @@
 
         <div class="tour-meta">
           <span>Length: {{ tour.distanceInKm | number:'1.0-3' }} km</span>
+          <span>Key points unlocked: {{ tour.keyPoints.length }}/{{ tour.keyPointCount }}</span>
         </div>
 
         <div class="duration-row" *ngIf="tour.durations.length">
@@ -37,28 +38,13 @@
             {{ formatDurationLabel(duration.transportType) }}: {{ duration.minutes }} min
           </span>
         </div>
-
-        <button
-          type="button"
-          class="add-button"
-          [disabled]="cartTourIds[tour.id] || addToCartSubmitting[tour.id]"
-          (click)="$event.stopPropagation(); $event.preventDefault(); addToCart(tour.id)"
-        >
-          {{
-            cartTourIds[tour.id]
-              ? 'Already in cart'
-              : (addToCartSubmitting[tour.id] ? 'Adding...' : 'Add to cart')
-          }}
-        </button>
-
-        <p class="action-message" *ngIf="addToCartMessages[tour.id]">{{ addToCartMessages[tour.id] }}</p>
       </div>
     </article>
   </div>
 
   <ng-template #emptyState>
     <div class="empty-state" *ngIf="!isLoading && !errorMessage">
-      No tours available for purchase.
+      You have not purchased any tours yet.
     </div>
   </ng-template>
 </section>

@@ -1,0 +1,67 @@
+<section class="tour-details-page">
+  <p class="page-message" *ngIf="isLoading">Loading tour details...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <ng-container *ngIf="tour && !isLoading && !errorMessage">
+    <div class="page-header">
+      <div>
+        <h1>{{ tour.name }}</h1>
+        <p>{{ tour.purchasedByCurrentUser ? 'Purchased tour with all checkpoints unlocked.' : 'Preview of a published tour before purchase.' }}</p>
+      </div>
+    </div>
+
+    <div class="map-card">
+      <div id="tour-details-map" class="map-shell"></div>
+    </div>
+
+    <article class="tour-summary">
+      <div class="summary-topline">
+        <span class="difficulty-pill">{{ tour.difficulty }}</span>
+        <span class="price-pill">{{ tour.price | number:'1.2-2' }} $</span>
+      </div>
+
+      <h2>{{ tour.name }}</h2>
+      <p class="tour-description">{{ tour.description }}</p>
+
+      <div class="tour-meta">
+        <span>Length: {{ tour.distanceInKm | number:'1.0-3' }} km</span>
+        <span>Key points: {{ tour.keyPoints.length }}/{{ tour.keyPointCount }}</span>
+      </div>
+
+      <div class="duration-row" *ngIf="tour.durations.length">
+        <span class="duration-pill" *ngFor="let duration of tour.durations">
+          {{ formatDurationLabel(duration.transportType) }}: {{ duration.minutes }} min
+        </span>
+      </div>
+
+      <div class="tag-row" *ngIf="tour.tags.length">
+        <span class="tag" *ngFor="let tag of tour.tags">{{ tag.startsWith('#') ? tag : ('#' + tag) }}</span>
+      </div>
+    </article>
+
+    <section class="reviews-section">
+      <div class="reviews-header">
+        <h3>Reviews</h3>
+        <span>{{ reviews.length }}</span>
+      </div>
+
+      <div class="empty-reviews" *ngIf="!reviews.length">
+        No reviews yet.
+      </div>
+
+      <article class="review-card" *ngFor="let review of reviews">
+        <div class="review-card-top">
+          <strong>{{ review.rating }}/5</strong>
+          <span>{{ review.touristUsername }} | {{ review.createdAt | date:'medium' }}</span>
+        </div>
+
+        <p class="visited-date">Visited: {{ review.visitedAt | date:'mediumDate' }}</p>
+        <p class="review-comment">{{ review.comment }}</p>
+
+        <div class="review-images" *ngIf="review.images.length">
+          <img *ngFor="let image of review.images" [src]="image" alt="Review image" />
+        </div>
+      </article>
+    </section>
+  </ng-container>
+</section>
