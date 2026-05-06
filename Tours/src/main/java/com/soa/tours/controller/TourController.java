@@ -19,6 +19,7 @@ import com.soa.tours.dto.CreateTourReviewRequest;
 import com.soa.tours.dto.CreateTourRequest;
 import com.soa.tours.dto.TourReviewResponse;
 import com.soa.tours.dto.TourResponse;
+import com.soa.tours.dto.TourPurchaseInfoResponse;
 import com.soa.tours.dto.TouristPositionResponse;
 import com.soa.tours.dto.UpdateKeyPointRequest;
 import com.soa.tours.dto.UpdateTourDurationsRequest;
@@ -85,6 +86,11 @@ public class TourController {
         @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
     ) {
         return tourService.getTourById(tourId, currentUser);
+    }
+
+    @GetMapping("/internal/{tourId}/purchase-info")
+    public TourPurchaseInfoResponse getTourPurchaseInfo(@PathVariable String tourId) {
+        return tourService.getTourPurchaseInfo(tourId);
     }
 
     @PatchMapping("/{tourId}/status")

@@ -19,6 +19,9 @@
 
       <h2>{{ tour.name }}</h2>
       <p class="tour-description">{{ tour.description }}</p>
+      <p class="tour-description" *ngIf="tour.purchasedByCurrentUser">
+        Purchased tour. All key points are unlocked.
+      </p>
 
       <div class="tour-meta">
         <span>Guide: {{ tour.authorUsername }}</span>
@@ -36,6 +39,25 @@
       <p class="tour-description" *ngIf="tour.keyPoints.length">
         Start point: {{ tour.keyPoints[0].name }} ({{ tour.keyPoints[0].latitude }}, {{ tour.keyPoints[0].longitude }})
       </p>
+      <div class="tag-row" *ngIf="tour.purchasedByCurrentUser && tour.keyPoints.length > 1">
+        <span class="tag" *ngFor="let point of tour.keyPoints">{{ point.order }}. {{ point.name }}</span>
+      </div>
+
+      <div class="review-form">
+        <button
+          type="button"
+          *ngIf="!tour.purchasedByCurrentUser"
+          [disabled]="cartTourIds[tour.id] || addToCartSubmitting[tour.id]"
+          (click)="addToCart(tour.id)"
+        >
+          {{
+            cartTourIds[tour.id]
+              ? 'Already in cart'
+              : (addToCartSubmitting[tour.id] ? 'Adding...' : 'Add to cart')
+          }}
+        </button>
+        <p class="review-message" *ngIf="addToCartMessages[tour.id]">{{ addToCartMessages[tour.id] }}</p>
+      </div>
 
       <div class="review-form" *ngIf="reviewForms[tour.id] as reviewForm">
         <h3>Leave a review</h3>

@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,15 +46,18 @@ public class TourService {
     private final TourRepository tourRepository;
     private final TouristPositionRepository touristPositionRepository;
     private final TourReviewRepository tourReviewRepository;
+    private final PaymentServiceClient paymentServiceClient;
 
     public TourService(
         TourRepository tourRepository,
         TouristPositionRepository touristPositionRepository,
-        TourReviewRepository tourReviewRepository
+        TourReviewRepository tourReviewRepository,
+        PaymentServiceClient paymentServiceClient
     ) {
         this.tourRepository = tourRepository;
         this.touristPositionRepository = touristPositionRepository;
         this.tourReviewRepository = tourReviewRepository;
+        this.paymentServiceClient = paymentServiceClient;
     }
 
     public TourResponse createTour(CreateTourRequest request, CurrentUser currentUser) {
@@ -100,10 +104,24 @@ public class TourService {
             throw new ApiException(HttpStatus.FORBIDDEN, "only tourist users can view published tours");
         }
 
+        Set<String> purchasedTourIds = paymentServiceClient.getPurchasedTourIdsForTourist(currentUser.getUsername());
+
         return tourRepository.findByStatusOrderByCreatedAtDesc(TourStatus.PUBLISHED)
             .stream()
-            .map(this::toTouristResponse)
+            .map(tour -> toTouristResponse(tour, purchasedTourIds.contains(tour.getId())))
             .toList();
+    }
+
+    public com.soa.tours.dto.TourPurchaseInfoResponse getTourPurchaseInfo(String tourId) {
+        Tour tour = tourRepository.findById(tourId)
+            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "tour not found"));
+
+        return new com.soa.tours.dto.TourPurchaseInfoResponse(
+            tour.getId(),
+            tour.getName(),
+            tour.getPrice() == null ? BigDecimal.ZERO : tour.getPrice(),
+            tour.getStatus() == null ? TourStatus.DRAFT.getValue() : tour.getStatus().getValue()
+        );
     }
 
     public TourResponse getTourById(String tourId, CurrentUser currentUser) {
@@ -471,6 +489,7 @@ public class TourService {
             tour.getStatus() == null ? TourStatus.DRAFT.getValue() : tour.getStatus().getValue(),
             tour.getDistanceInKm(),
             tour.getPrice(),
+            false,
             tour.getPublishedAt(),
             tour.getArchivedAt(),
             tour.getCreatedAt(),
@@ -478,12 +497,12 @@ public class TourService {
         );
     }
 
-    private TourResponse toTouristResponse(Tour tour) {
+    private TourResponse toTouristResponse(Tour tour, boolean purchasedByCurrentUser) {
         List<KeyPoint> keyPoints = tour.getKeyPoints() == null ? List.of() : tour.getKeyPoints();
         int keyPointCount = keyPoints.size();
         List<KeyPointResponse> visibleKeyPoints = keyPoints.stream()
             .sorted((left, right) -> Integer.compare(left.getOrder(), right.getOrder()))
-            .limit(1)
+            .limit(purchasedByCurrentUser ? keyPoints.size() : 1L)
             .map(this::toKeyPointResponse)
             .toList();
         List<TourDurationResponse> durations = tour.getDurations() == null
@@ -505,6 +524,7 @@ public class TourService {
             tour.getStatus() == null ? TourStatus.DRAFT.getValue() : tour.getStatus().getValue(),
             tour.getDistanceInKm(),
             tour.getPrice(),
+            purchasedByCurrentUser,
             tour.getPublishedAt(),
             tour.getArchivedAt(),
             tour.getCreatedAt(),
