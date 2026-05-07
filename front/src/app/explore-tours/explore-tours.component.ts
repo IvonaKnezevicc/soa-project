@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
+import { PaymentService } from '../services/payment.service';
 import { TourReview } from '../models/tour-review.model';
 import { Tour } from '../models/tour.model';
 import { ToursService } from '../services/tours.service';
@@ -16,13 +17,20 @@ export class ExploreToursComponent implements OnInit {
   reviewSuccessMessages: Record<string, string> = {};
   reviewErrorMessages: Record<string, string> = {};
   reviewsByTourId: Record<string, TourReview[]> = {};
+  cartTourIds: Record<string, boolean> = {};
+  addToCartSubmitting: Record<string, boolean> = {};
+  addToCartMessages: Record<string, string> = {};
   isLoading = false;
   errorMessage = '';
 
-  constructor(private readonly toursService: ToursService) {}
+  constructor(
+    private readonly toursService: ToursService,
+    private readonly paymentService: PaymentService
+  ) {}
 
   ngOnInit(): void {
     this.loadTours();
+    this.loadCart();
   }
 
   private loadTours(): void {
@@ -117,6 +125,44 @@ export class ExploreToursComponent implements OnInit {
       },
       error: () => {
         this.reviewsByTourId[tourId] = [];
+      }
+    });
+  }
+
+  addToCart(tourId: string): void {
+    if (this.cartTourIds[tourId] || this.addToCartSubmitting[tourId]) {
+      return;
+    }
+
+    this.addToCartSubmitting[tourId] = true;
+    this.addToCartMessages[tourId] = '';
+
+    this.paymentService.addTourToCart(tourId).subscribe({
+      next: (cart) => {
+        this.cartTourIds = cart.items.reduce<Record<string, boolean>>((items, item) => {
+          items[item.tourId] = true;
+          return items;
+        }, {});
+        this.addToCartMessages[tourId] = 'Added to cart.';
+        this.addToCartSubmitting[tourId] = false;
+      },
+      error: (error) => {
+        this.addToCartMessages[tourId] = error?.error?.message ?? 'Failed to add the tour to cart.';
+        this.addToCartSubmitting[tourId] = false;
+      }
+    });
+  }
+
+  private loadCart(): void {
+    this.paymentService.getMyCart().subscribe({
+      next: (cart) => {
+        this.cartTourIds = cart.items.reduce<Record<string, boolean>>((items, item) => {
+          items[item.tourId] = true;
+          return items;
+        }, {});
+      },
+      error: () => {
+        this.cartTourIds = {};
       }
     });
   }

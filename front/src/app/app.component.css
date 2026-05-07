@@ -78,6 +78,18 @@
   font-weight: 600;
 }
 
+.wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: #eef6d9;
+  color: #365314;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .profile-button {
   border: 1px solid #edd0dc;
   cursor: pointer;

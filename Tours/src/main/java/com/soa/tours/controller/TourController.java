@@ -15,10 +15,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.soa.tours.dto.CreateKeyPointRequest;
+import com.soa.tours.dto.CreatePurchasedToursRequest;
 import com.soa.tours.dto.CreateTourReviewRequest;
 import com.soa.tours.dto.CreateTourRequest;
+import com.soa.tours.dto.PurchasedTourIdsResponse;
 import com.soa.tours.dto.TourReviewResponse;
 import com.soa.tours.dto.TourResponse;
+import com.soa.tours.dto.TourPurchaseInfoResponse;
 import com.soa.tours.dto.TouristPositionResponse;
 import com.soa.tours.dto.UpdateKeyPointRequest;
 import com.soa.tours.dto.UpdateTourDurationsRequest;
@@ -85,6 +88,26 @@ public class TourController {
         @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
     ) {
         return tourService.getTourById(tourId, currentUser);
+    }
+
+    @GetMapping("/internal/{tourId}/purchase-info")
+    public TourPurchaseInfoResponse getTourPurchaseInfo(@PathVariable String tourId) {
+        return tourService.getTourPurchaseInfo(tourId);
+    }
+
+    @GetMapping("/internal/purchases/by-tourist/{touristId}")
+    public PurchasedTourIdsResponse getPurchasedTourIds(@PathVariable String touristId) {
+        return tourService.getPurchasedTourIds(touristId);
+    }
+
+    @PostMapping("/internal/purchases")
+    public PurchasedTourIdsResponse createPurchasedTours(@Valid @RequestBody CreatePurchasedToursRequest request) {
+        return tourService.createPurchasedTours(request);
+    }
+
+    @PostMapping("/internal/purchases/rollback")
+    public PurchasedTourIdsResponse rollbackPurchasedTours(@Valid @RequestBody CreatePurchasedToursRequest request) {
+        return tourService.rollbackPurchasedTours(request);
     }
 
     @PatchMapping("/{tourId}/status")

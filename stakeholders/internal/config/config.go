@@ -15,6 +15,7 @@ type Config struct {
 	Neo4jUsername        string
 	Neo4jPassword        string
 	Neo4jDatabase        string
+	PaymentServiceURL    string
 	CORSAllowedOrigins   []string
 	JWTSecret            string
 	JWTIssuer            string
@@ -30,6 +31,7 @@ func Load() (*Config, error) {
 		Neo4jUsername:        getEnv("NEO4J_USERNAME", ""),
 		Neo4jPassword:        getEnv("NEO4J_PASSWORD", ""),
 		Neo4jDatabase:        getEnv("NEO4J_DATABASE", "neo4j"),
+		PaymentServiceURL:    getEnv("PAYMENT_SERVICE_URL", "http://localhost:8084"),
 		CORSAllowedOrigins:   getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:4200"}),
 		JWTSecret:            getEnv("JWT_SECRET", ""),
 		JWTIssuer:            getEnv("JWT_ISSUER", "stakeholders-service"),

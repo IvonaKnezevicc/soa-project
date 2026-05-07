@@ -1,0 +1,41 @@
+<section class="shopping-cart-page">
+  <div class="page-header">
+    <div>
+      <h1>Shopping cart</h1>
+      <p>Review selected tours before checkout.</p>
+    </div>
+    <span class="total-pill" *ngIf="cart">Total: {{ cart.totalPrice | number:'1.2-2' }}</span>
+  </div>
+
+  <p class="page-message" *ngIf="isLoading">Loading cart...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="page-message success" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <div class="cart-card" *ngIf="!isLoading && cart as currentCart">
+    <div class="empty-state" *ngIf="!currentCart.items.length">
+      No tours in the cart.
+    </div>
+
+    <div class="cart-items" *ngIf="currentCart.items.length">
+      <article class="cart-item" *ngFor="let item of currentCart.items">
+        <div>
+          <h2>{{ item.tourName }}</h2>
+          <p>Tour ID: {{ item.tourId }}</p>
+        </div>
+        <div class="cart-item-actions">
+          <strong>{{ item.price | number:'1.2-2' }}</strong>
+          <button type="button" (click)="removeItem(item.tourId)" [disabled]="removingTourId === item.tourId || isCheckingOut">
+            {{ removingTourId === item.tourId ? 'Removing...' : 'Remove' }}
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <div class="checkout-bar" *ngIf="currentCart.items.length">
+      <span>Total price: {{ currentCart.totalPrice | number:'1.2-2' }}</span>
+      <button type="button" (click)="checkout()" [disabled]="isCheckingOut">
+        {{ isCheckingOut ? 'Processing...' : 'Checkout' }}
+      </button>
+    </div>
+  </div>
+</section>

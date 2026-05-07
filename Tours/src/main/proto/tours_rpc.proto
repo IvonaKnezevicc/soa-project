@@ -5,10 +5,13 @@ package toursrpc;
 option java_multiple_files = true;
 option java_package = "com.soa.tours.grpc";
 option java_outer_classname = "ToursRpcProto";
+option csharp_namespace = "PaymentService.Grpc";
 
 service ToursRpcService {
   rpc GetPublishedTours(GetPublishedToursRequest) returns (GetPublishedToursResponse);
   rpc PublishTour(PublishTourRequest) returns (PublishTourResponse);
+  rpc GetToursForPurchase(GetToursForPurchaseRequest) returns (GetToursForPurchaseResponse);
+  rpc CreatePurchasedTours(CreatePurchasedToursRpcRequest) returns (CreatePurchasedToursRpcResponse);
 }
 
 message GetPublishedToursRequest {
@@ -41,4 +44,31 @@ message PublishTourResponse {
   string message = 2;
   string tour_id = 3;
   string status = 4;
+}
+
+message GetToursForPurchaseRequest {
+  repeated string tour_ids = 1;
+}
+
+message GetToursForPurchaseResponse {
+  repeated TourForPurchase tours = 1;
+}
+
+message TourForPurchase {
+  string id = 1;
+  string name = 2;
+  string status = 3;
+  string price = 4;
+  bool exists = 5;
+}
+
+message CreatePurchasedToursRpcRequest {
+  string tourist_id = 1;
+  repeated string tour_ids = 2;
+}
+
+message CreatePurchasedToursRpcResponse {
+  bool success = 1;
+  string message = 2;
+  repeated string tour_ids = 3;
 }

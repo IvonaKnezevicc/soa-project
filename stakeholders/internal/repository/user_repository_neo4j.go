@@ -255,6 +255,21 @@ func (r *Neo4jUserRepository) BlockByUsername(ctx context.Context, username stri
 	return mapNodeToUser(node)
 }
 
+func (r *Neo4jUserRepository) DeleteByID(ctx context.Context, id string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	_, err := session.Run(ctx, `
+		MATCH (u:User)
+		WHERE u.id = $id
+		DETACH DELETE u
+	`, map[string]any{
+		"id": id,
+	})
+
+	return err
+}
+
 func (r *Neo4jUserRepository) UpdateProfileByUsername(
 	ctx context.Context,
 	username, firstName, lastName, profileImage, biography, motto string,

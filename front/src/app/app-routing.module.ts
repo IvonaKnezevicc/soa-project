@@ -6,11 +6,15 @@ import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CreateTourComponent } from './create-tour/create-tour.component';
 import { ExploreToursComponent } from './explore-tours/explore-tours.component';
+import { FindToursComponent } from './find-tours/find-tours.component';
 import { HomeComponent } from './home/home.component';
 import { FindUsersComponent } from './find-users/find-users.component';
 import { MyToursComponent } from './my-tours/my-tours.component';
 import { PositionSimulatorComponent } from './position-simulator/position-simulator.component';
 import { ProfileComponent } from './profile/profile.component';
+import { ShoppingCartComponent } from './shopping-cart/shopping-cart.component';
+import { TourDetailsComponent } from './tour-details/tour-details.component';
+import { TouristMyToursComponent } from './tourist-my-tours/tourist-my-tours.component';
 import { TourKeyPointsComponent } from './tour-key-points/tour-key-points.component';
 import { adminGuard } from './services/admin.guard';
 import { authGuard } from './services/auth.guard';
@@ -28,7 +32,11 @@ const routes: Routes = [
   { path: 'create-tour', component: CreateTourComponent, canActivate: [authGuard, guideGuard] },
   { path: 'my-tours', component: MyToursComponent, canActivate: [authGuard, guideGuard] },
   { path: 'my-tours/:id/key-points', component: TourKeyPointsComponent, canActivate: [authGuard, guideGuard] },
+  { path: 'find-tours', component: FindToursComponent, canActivate: [authGuard, touristGuard] },
+  { path: 'tourist/my-tours', component: TouristMyToursComponent, canActivate: [authGuard, touristGuard] },
+  { path: 'tours/:id', component: TourDetailsComponent, canActivate: [authGuard, touristGuard] },
   { path: 'tours', component: ExploreToursComponent, canActivate: [authGuard, touristGuard] },
+  { path: 'shopping-cart', component: ShoppingCartComponent, canActivate: [authGuard, touristGuard] },
   { path: 'position-simulator', component: PositionSimulatorComponent, canActivate: [authGuard, touristGuard] },
   { path: 'dashboard', component: HomeComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'login' }

@@ -19,6 +19,7 @@ public class TourResponse {
     private String status;
     private double distanceInKm;
     private BigDecimal price;
+    private boolean purchasedByCurrentUser;
     private Instant publishedAt;
     private Instant archivedAt;
     private Instant createdAt;
@@ -41,6 +42,7 @@ public class TourResponse {
         String status,
         double distanceInKm,
         BigDecimal price,
+        boolean purchasedByCurrentUser,
         Instant publishedAt,
         Instant archivedAt,
         Instant createdAt,
@@ -59,6 +61,7 @@ public class TourResponse {
         this.status = status;
         this.distanceInKm = distanceInKm;
         this.price = price;
+        this.purchasedByCurrentUser = purchasedByCurrentUser;
         this.publishedAt = publishedAt;
         this.archivedAt = archivedAt;
         this.createdAt = createdAt;
@@ -167,6 +170,14 @@ public class TourResponse {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public boolean isPurchasedByCurrentUser() {
+        return purchasedByCurrentUser;
+    }
+
+    public void setPurchasedByCurrentUser(boolean purchasedByCurrentUser) {
+        this.purchasedByCurrentUser = purchasedByCurrentUser;
     }
 
     public Instant getPublishedAt() {

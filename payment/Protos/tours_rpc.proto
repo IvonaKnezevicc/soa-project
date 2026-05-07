@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package toursrpc;
+
+option csharp_namespace = "PaymentService.Grpc";
+
+service ToursRpcService {
+  rpc GetPublishedTours(GetPublishedToursRequest) returns (GetPublishedToursResponse);
+  rpc PublishTour(PublishTourRequest) returns (PublishTourResponse);
+  rpc GetToursForPurchase(GetToursForPurchaseRequest) returns (GetToursForPurchaseResponse);
+  rpc CreatePurchasedTours(CreatePurchasedToursRpcRequest) returns (CreatePurchasedToursRpcResponse);
+}
+
+message GetPublishedToursRequest {
+}
+
+message GetPublishedToursResponse {
+  repeated PublishedTour tours = 1;
+}
+
+message PublishedTour {
+  string id = 1;
+  string author_username = 2;
+  string name = 3;
+  string description = 4;
+  string difficulty = 5;
+  repeated string tags = 6;
+  string status = 7;
+  string first_key_point_name = 8;
+  double first_key_point_latitude = 9;
+  double first_key_point_longitude = 10;
+}
+
+message PublishTourRequest {
+  string tour_id = 1;
+  string author_username = 2;
+}
+
+message PublishTourResponse {
+  bool success = 1;
+  string message = 2;
+  string tour_id = 3;
+  string status = 4;
+}
+
+message GetToursForPurchaseRequest {
+  repeated string tour_ids = 1;
+}
+
+message GetToursForPurchaseResponse {
+  repeated TourForPurchase tours = 1;
+}
+
+message TourForPurchase {
+  string id = 1;
+  string name = 2;
+  string status = 3;
+  string price = 4;
+  bool exists = 5;
+}
+
+message CreatePurchasedToursRpcRequest {
+  string tourist_id = 1;
+  repeated string tour_ids = 2;
+}
+
+message CreatePurchasedToursRpcResponse {
+  bool success = 1;
+  string message = 2;
+  repeated string tour_ids = 3;
+}

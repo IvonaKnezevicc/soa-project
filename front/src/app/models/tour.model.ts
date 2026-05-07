@@ -21,6 +21,7 @@ export interface Tour {
   status: TourStatus;
   distanceInKm: number;
   price: number;
+  purchasedByCurrentUser: boolean;
   publishedAt?: string | null;
   archivedAt?: string | null;
   createdAt: string;

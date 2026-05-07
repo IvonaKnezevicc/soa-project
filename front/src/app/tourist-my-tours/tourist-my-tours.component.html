@@ -1,0 +1,50 @@
+<section class="tourist-my-tours-page">
+  <div class="page-header">
+    <div>
+      <h1>My Tours</h1>
+      <p>View all tours you already purchased.</p>
+    </div>
+    <span class="total-pill">Purchased: {{ tours.length }}</span>
+  </div>
+
+  <p class="page-message" *ngIf="isLoading">Loading purchased tours...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <div class="tour-grid" *ngIf="!isLoading && !errorMessage && tours.length; else emptyState">
+    <article class="tour-card clickable" *ngFor="let tour of tours" [routerLink]="['/tours', tour.id]">
+      <div class="tour-image-wrap">
+        <img *ngIf="getFirstPointImage(tour); else imageFallback" [src]="getFirstPointImage(tour)" [alt]="tour.name" />
+        <ng-template #imageFallback>
+          <div class="image-fallback">No image</div>
+        </ng-template>
+      </div>
+
+      <div class="tour-content">
+        <div class="tour-topline">
+          <span class="difficulty-pill">{{ tour.difficulty }}</span>
+          <span class="price-pill">{{ tour.price | number:'1.2-2' }} $</span>
+        </div>
+
+        <h2>{{ tour.name }}</h2>
+        <p class="tour-description">{{ tour.description }}</p>
+
+        <div class="tour-meta">
+          <span>Length: {{ tour.distanceInKm | number:'1.0-3' }} km</span>
+          <span>Key points unlocked: {{ tour.keyPoints.length }}/{{ tour.keyPointCount }}</span>
+        </div>
+
+        <div class="duration-row" *ngIf="tour.durations.length">
+          <span class="duration-pill" *ngFor="let duration of tour.durations">
+            {{ formatDurationLabel(duration.transportType) }}: {{ duration.minutes }} min
+          </span>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state" *ngIf="!isLoading && !errorMessage">
+      You have not purchased any tours yet.
+    </div>
+  </ng-template>
+</section>
