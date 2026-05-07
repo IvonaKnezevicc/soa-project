@@ -12,6 +12,8 @@ service ToursRpcService {
   rpc PublishTour(PublishTourRequest) returns (PublishTourResponse);
   rpc GetToursForPurchase(GetToursForPurchaseRequest) returns (GetToursForPurchaseResponse);
   rpc CreatePurchasedTours(CreatePurchasedToursRpcRequest) returns (CreatePurchasedToursRpcResponse);
+  rpc StartTourExecution(StartTourExecutionRequest) returns (TourExecutionRpcResponse);
+  rpc CheckTourExecutionProgress(CheckTourExecutionProgressRequest) returns (TourExecutionRpcResponse);
 }
 
 message GetPublishedToursRequest {
@@ -71,4 +73,42 @@ message CreatePurchasedToursRpcResponse {
   bool success = 1;
   string message = 2;
   repeated string tour_ids = 3;
+}
+
+message StartTourExecutionRequest {
+  string tour_id = 1;
+  string tourist_id = 2;
+  string tourist_username = 3;
+}
+
+message CheckTourExecutionProgressRequest {
+  string execution_id = 1;
+  string tourist_id = 2;
+}
+
+message TourExecutionRpcResponse {
+  bool success = 1;
+  string message = 2;
+  string execution_id = 3;
+  string tourist_id = 4;
+  string tourist_username = 5;
+  string tour_id = 6;
+  string tour_name = 7;
+  string status = 8;
+  string started_at = 9;
+  string completed_at = 10;
+  string abandoned_at = 11;
+  string last_activity_at = 12;
+  double started_latitude = 13;
+  double started_longitude = 14;
+  repeated CompletedKeyPointRpc completed_key_points = 15;
+}
+
+message CompletedKeyPointRpc {
+  string key_point_id = 1;
+  string key_point_name = 2;
+  int32 order = 3;
+  double latitude = 4;
+  double longitude = 5;
+  string reached_at = 6;
 }

@@ -1,6 +1,7 @@
 <section class="tour-details-page">
   <p class="page-message" *ngIf="isLoading">Loading tour details...</p>
   <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="page-message error" *ngIf="actionMessage">{{ actionMessage }}</p>
 
   <ng-container *ngIf="tour && !isLoading && !errorMessage">
     <div class="page-header">
@@ -8,6 +9,23 @@
         <h1>{{ tour.name }}</h1>
         <p>{{ tour.purchasedByCurrentUser ? 'Purchased tour with all checkpoints unlocked.' : 'Preview of a published tour before purchase.' }}</p>
       </div>
+      <button
+        *ngIf="canStartTour()"
+        type="button"
+        class="start-button"
+        (click)="startTour()"
+        [disabled]="isStarting"
+      >
+        {{ isStarting ? 'Starting...' : 'Start tour' }}
+      </button>
+      <button
+        *ngIf="canContinueActiveTour()"
+        type="button"
+        class="start-button"
+        (click)="continueActiveTour()"
+      >
+        Continue active tour
+      </button>
     </div>
 
     <div class="map-card">

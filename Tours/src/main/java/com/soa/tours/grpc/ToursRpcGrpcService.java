@@ -16,6 +16,9 @@ import com.soa.tours.model.Tour;
 import com.soa.tours.model.TourStatus;
 import com.soa.tours.repository.PurchasedTourRepository;
 import com.soa.tours.repository.TourRepository;
+import com.soa.tours.service.TourExecutionService;
+import com.soa.tours.dto.CompletedKeyPointResponse;
+import com.soa.tours.dto.TourExecutionResponse;
 
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -26,10 +29,16 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
 
     private final TourRepository tourRepository;
     private final PurchasedTourRepository purchasedTourRepository;
+    private final TourExecutionService tourExecutionService;
 
-    public ToursRpcGrpcService(TourRepository tourRepository, PurchasedTourRepository purchasedTourRepository) {
+    public ToursRpcGrpcService(
+        TourRepository tourRepository,
+        PurchasedTourRepository purchasedTourRepository,
+        TourExecutionService tourExecutionService
+    ) {
         this.tourRepository = tourRepository;
         this.purchasedTourRepository = purchasedTourRepository;
+        this.tourExecutionService = tourExecutionService;
     }
 
     @Override
@@ -261,6 +270,47 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
         responseObserver.onCompleted();
     }
 
+    @Override
+    public void startTourExecution(
+        StartTourExecutionRequest request,
+        StreamObserver<TourExecutionRpcResponse> responseObserver
+    ) {
+        try {
+            TourExecutionResponse execution = tourExecutionService.startTourExecution(
+                request.getTourId(),
+                request.getTouristId(),
+                request.getTouristUsername()
+            );
+            responseObserver.onNext(toTourExecutionRpcResponse(execution, "tour execution started"));
+        } catch (RuntimeException exception) {
+            responseObserver.onNext(TourExecutionRpcResponse.newBuilder()
+                .setSuccess(false)
+                .setMessage(valueOrEmpty(exception.getMessage()))
+                .build());
+        }
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void checkTourExecutionProgress(
+        CheckTourExecutionProgressRequest request,
+        StreamObserver<TourExecutionRpcResponse> responseObserver
+    ) {
+        try {
+            TourExecutionResponse execution = tourExecutionService.checkExecutionProgress(
+                request.getExecutionId(),
+                request.getTouristId()
+            );
+            responseObserver.onNext(toTourExecutionRpcResponse(execution, "tour execution progress checked"));
+        } catch (RuntimeException exception) {
+            responseObserver.onNext(TourExecutionRpcResponse.newBuilder()
+                .setSuccess(false)
+                .setMessage(valueOrEmpty(exception.getMessage()))
+                .build());
+        }
+        responseObserver.onCompleted();
+    }
+
     private KeyPoint extractFirstKeyPoint(Tour tour) {
         if (tour.getKeyPoints() == null || tour.getKeyPoints().isEmpty()) {
             return null;
@@ -273,5 +323,45 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
 
     private String valueOrEmpty(String value) {
         return value == null ? "" : value;
+    }
+
+    private TourExecutionRpcResponse toTourExecutionRpcResponse(
+        TourExecutionResponse execution,
+        String message
+    ) {
+        TourExecutionRpcResponse.Builder responseBuilder = TourExecutionRpcResponse.newBuilder()
+            .setSuccess(true)
+            .setMessage(message)
+            .setExecutionId(valueOrEmpty(execution.getId()))
+            .setTouristId(valueOrEmpty(execution.getTouristId()))
+            .setTouristUsername(valueOrEmpty(execution.getTouristUsername()))
+            .setTourId(valueOrEmpty(execution.getTourId()))
+            .setTourName(valueOrEmpty(execution.getTourName()))
+            .setStatus(valueOrEmpty(execution.getStatus()))
+            .setStartedAt(instantOrEmpty(execution.getStartedAt()))
+            .setCompletedAt(instantOrEmpty(execution.getCompletedAt()))
+            .setAbandonedAt(instantOrEmpty(execution.getAbandonedAt()))
+            .setLastActivityAt(instantOrEmpty(execution.getLastActivityAt()))
+            .setStartedLatitude(execution.getStartedLatitude())
+            .setStartedLongitude(execution.getStartedLongitude());
+
+        if (execution.getCompletedKeyPoints() != null) {
+            for (CompletedKeyPointResponse keyPoint : execution.getCompletedKeyPoints()) {
+                responseBuilder.addCompletedKeyPoints(CompletedKeyPointRpc.newBuilder()
+                    .setKeyPointId(valueOrEmpty(keyPoint.getKeyPointId()))
+                    .setKeyPointName(valueOrEmpty(keyPoint.getKeyPointName()))
+                    .setOrder(keyPoint.getOrder())
+                    .setLatitude(keyPoint.getLatitude())
+                    .setLongitude(keyPoint.getLongitude())
+                    .setReachedAt(instantOrEmpty(keyPoint.getReachedAt()))
+                    .build());
+            }
+        }
+
+        return responseBuilder.build();
+    }
+
+    private String instantOrEmpty(Instant instant) {
+        return instant == null ? "" : instant.toString();
     }
 }

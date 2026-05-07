@@ -1,0 +1,68 @@
+<section class="active-tour-page">
+  <p class="page-message" *ngIf="isLoading">Loading active tour...</p>
+  <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="page-message success" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <ng-container *ngIf="tour && execution && !isLoading">
+    <div class="page-header">
+      <div>
+        <h1>{{ tour.name }}</h1>
+        <p>Active tour session</p>
+      </div>
+      <span class="status-pill">{{ execution.status }}</span>
+    </div>
+
+    <div class="map-card">
+      <div id="active-tour-map" class="map-shell"></div>
+    </div>
+
+    <section class="execution-summary">
+      <div class="summary-grid">
+        <div>
+          <span>Started</span>
+          <strong>{{ execution.startedAt | date:'medium' }}</strong>
+        </div>
+        <div>
+          <span>Last activity</span>
+          <strong>{{ execution.lastActivityAt | date:'medium' }}</strong>
+        </div>
+        <div>
+          <span>Completed key points</span>
+          <strong>{{ execution.completedKeyPoints.length }}/{{ tour.keyPointCount }}</strong>
+        </div>
+        <div *ngIf="position">
+          <span>Current position</span>
+          <strong>{{ position.latitude }}, {{ position.longitude }}</strong>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="secondary-button" (click)="backToDetails()">Details</button>
+        <button type="button" class="secondary-button" (click)="checkProgress()" [disabled]="isChecking || execution.status !== 'active'">
+          {{ isChecking ? 'Checking...' : 'Check progress' }}
+        </button>
+        <button type="button" class="primary-button" (click)="completeExecution()" [disabled]="isFinishing || execution.status !== 'active'">
+          Complete
+        </button>
+        <button type="button" class="danger-button" (click)="abandonExecution()" [disabled]="isFinishing || execution.status !== 'active'">
+          Abandon
+        </button>
+      </div>
+    </section>
+
+    <section class="key-points-section">
+      <div class="section-header">
+        <h2>Key points</h2>
+        <span>{{ execution.completedKeyPoints.length }}/{{ tour.keyPointCount }}</span>
+      </div>
+
+      <article class="key-point-item" *ngFor="let point of tour.keyPoints" [class.completed]="isKeyPointCompleted(point.id)">
+        <div>
+          <strong>{{ point.order }}. {{ point.name }}</strong>
+          <p>{{ point.description }}</p>
+        </div>
+        <span>{{ isKeyPointCompleted(point.id) ? (getCompletedAt(point.id) | date:'shortTime') : 'Pending' }}</span>
+      </article>
+    </section>
+  </ng-container>
+</section>

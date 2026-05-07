@@ -6,6 +6,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AdminUsersComponent } from './admin-users/admin-users.component';
+import { ActiveTourComponent } from './active-tour/active-tour.component';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CreateTourComponent } from './create-tour/create-tour.component';
@@ -25,6 +26,7 @@ import { AuthInterceptor } from './services/auth.interceptor';
 @NgModule({
   declarations: [
     AppComponent,
+    ActiveTourComponent,
     AdminUsersComponent,
     LoginComponent,
     RegisterComponent,
