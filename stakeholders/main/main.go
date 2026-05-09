@@ -9,6 +9,7 @@ import (
 	"soa-project/stakeholders/internal/config"
 	"soa-project/stakeholders/internal/controller"
 	"soa-project/stakeholders/internal/middleware"
+	"soa-project/stakeholders/internal/observability"
 	"soa-project/stakeholders/internal/repository"
 	"soa-project/stakeholders/internal/server"
 	"soa-project/stakeholders/internal/service"
@@ -18,6 +19,19 @@ func main() {
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
+	}
+
+	shutdownTracing, err := observability.InitTracing(context.Background(), cfg.OTELServiceName, cfg.OTELEndpoint)
+	if err != nil {
+		log.Printf("failed to initialize tracing: %v", err)
+	} else {
+		defer func() {
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if tracingErr := shutdownTracing(shutdownCtx); tracingErr != nil {
+				log.Printf("failed to shut down tracing: %v", tracingErr)
+			}
+		}()
 	}
 
 	driver, err := repository.NewNeo4jDriver(cfg)
