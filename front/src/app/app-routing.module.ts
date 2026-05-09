@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 import { AdminUsersComponent } from './admin-users/admin-users.component';
+import { ActiveTourComponent } from './active-tour/active-tour.component';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CreateTourComponent } from './create-tour/create-tour.component';
@@ -34,6 +35,7 @@ const routes: Routes = [
   { path: 'my-tours/:id/key-points', component: TourKeyPointsComponent, canActivate: [authGuard, guideGuard] },
   { path: 'find-tours', component: FindToursComponent, canActivate: [authGuard, touristGuard] },
   { path: 'tourist/my-tours', component: TouristMyToursComponent, canActivate: [authGuard, touristGuard] },
+  { path: 'tours/:id/active', component: ActiveTourComponent, canActivate: [authGuard, touristGuard] },
   { path: 'tours/:id', component: TourDetailsComponent, canActivate: [authGuard, touristGuard] },
   { path: 'tours', component: ExploreToursComponent, canActivate: [authGuard, touristGuard] },
   { path: 'shopping-cart', component: ShoppingCartComponent, canActivate: [authGuard, touristGuard] },

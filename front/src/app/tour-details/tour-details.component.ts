@@ -1,9 +1,10 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 
 import { Tour } from '../models/tour.model';
+import { TourExecution } from '../models/tour-execution.model';
 import { TourReview } from '../models/tour-review.model';
 import { ToursService } from '../services/tours.service';
 
@@ -14,9 +15,12 @@ import { ToursService } from '../services/tours.service';
 })
 export class TourDetailsComponent implements OnInit, OnDestroy {
   tour: Tour | null = null;
+  activeExecution: TourExecution | null = null;
   reviews: TourReview[] = [];
   isLoading = false;
+  isStarting = false;
   errorMessage = '';
+  actionMessage = '';
 
   private map: L.Map | null = null;
   private pointsLayer = L.layerGroup();
@@ -26,6 +30,7 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly route: ActivatedRoute,
+    private readonly router: Router,
     private readonly toursService: ToursService
   ) {}
 
@@ -54,6 +59,51 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
+  canStartTour(): boolean {
+    return !!this.tour
+      && this.tour.purchasedByCurrentUser
+      && (this.tour.status === 'published' || this.tour.status === 'archived')
+      && !this.activeExecution;
+  }
+
+  canContinueActiveTour(): boolean {
+    return !!this.tour
+      && !!this.activeExecution
+      && this.activeExecution.tourId === this.tour.id
+      && this.activeExecution.status === 'active';
+  }
+
+  startTour(): void {
+    if (!this.tour || !this.canStartTour() || this.isStarting) {
+      return;
+    }
+
+    this.isStarting = true;
+    this.errorMessage = '';
+    this.actionMessage = '';
+    const tourId = this.tour.id;
+
+    this.toursService.startTourExecution(tourId).subscribe({
+      next: () => {
+        this.isStarting = false;
+        this.router.navigate(['/tours', tourId, 'active']);
+      },
+      error: (error) => {
+        this.actionMessage = error?.error?.message ?? 'Failed to start the tour.';
+        this.isStarting = false;
+        this.loadActiveExecution();
+      }
+    });
+  }
+
+  continueActiveTour(): void {
+    if (!this.tour || !this.canContinueActiveTour()) {
+      return;
+    }
+
+    this.router.navigate(['/tours', this.tour.id, 'active']);
+  }
+
   private loadTour(): void {
     if (!this.tourId) {
       this.errorMessage = 'Tour id is missing.';
@@ -69,6 +119,7 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
           ...tour,
           keyPoints: [...tour.keyPoints].sort((left, right) => left.order - right.order)
         };
+        this.loadActiveExecution();
         this.loadReviews();
         this.isLoading = false;
         window.setTimeout(() => this.ensureMapInitialized());
@@ -76,6 +127,20 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.errorMessage = error?.error?.message ?? 'Failed to load tour details.';
         this.isLoading = false;
+      }
+    });
+  }
+
+  private loadActiveExecution(): void {
+    this.toursService.getActiveExecution().subscribe({
+      next: (execution) => {
+        this.activeExecution = execution;
+        if (this.tour && execution.tourId !== this.tour.id) {
+          this.actionMessage = `You already have an active tour: ${execution.tourName}.`;
+        }
+      },
+      error: () => {
+        this.activeExecution = null;
       }
     });
   }

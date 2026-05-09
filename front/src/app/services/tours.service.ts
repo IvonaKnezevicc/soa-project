@@ -6,6 +6,7 @@ import { CreateTourReviewRequest } from '../models/create-tour-review-request.mo
 import { CreateTourRequest } from '../models/create-tour-request.model';
 import { KeyPointPayload } from '../models/key-point-payload.model';
 import { TourReview } from '../models/tour-review.model';
+import { TourExecution } from '../models/tour-execution.model';
 import { Tour, TourDuration, TourStatus } from '../models/tour.model';
 import { TouristPosition } from '../models/tourist-position.model';
 
@@ -62,6 +63,39 @@ export class ToursService {
 
   createTourReview(tourId: string, payload: CreateTourReviewRequest): Observable<TourReview> {
     return this.http.post<TourReview>(`${this.baseUrl}/${encodeURIComponent(tourId)}/reviews`, payload);
+  }
+
+  startTourExecution(tourId: string): Observable<TourExecution> {
+    return this.http.post<TourExecution>(`${this.baseUrl}/${encodeURIComponent(tourId)}/executions/start`, {});
+  }
+
+  getActiveExecution(): Observable<TourExecution> {
+    return this.http.get<TourExecution>(`${this.baseUrl}/executions/active`);
+  }
+
+  getMyExecutions(): Observable<TourExecution[]> {
+    return this.http.get<TourExecution[]>(`${this.baseUrl}/executions/my`);
+  }
+
+  checkExecutionProgress(executionId: string): Observable<TourExecution> {
+    return this.http.post<TourExecution>(
+      `${this.baseUrl}/executions/${encodeURIComponent(executionId)}/check-progress`,
+      {}
+    );
+  }
+
+  completeExecution(executionId: string): Observable<TourExecution> {
+    return this.http.post<TourExecution>(
+      `${this.baseUrl}/executions/${encodeURIComponent(executionId)}/complete`,
+      {}
+    );
+  }
+
+  abandonExecution(executionId: string): Observable<TourExecution> {
+    return this.http.post<TourExecution>(
+      `${this.baseUrl}/executions/${encodeURIComponent(executionId)}/abandon`,
+      {}
+    );
   }
 
   createKeyPoint(tourId: string, payload: KeyPointPayload): Observable<Tour> {

@@ -5,6 +5,13 @@
   margin: 0 auto;
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+}
+
 .page-header h1 {
   margin: 0;
   font-size: 2rem;
@@ -26,6 +33,21 @@
 
 .page-message.error {
   color: #8b1e3f;
+}
+
+.start-button {
+  border: 0;
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.start-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .map-card,
@@ -169,6 +191,11 @@
 }
 
 @media (max-width: 700px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .map-shell {
     height: 320px;
   }
