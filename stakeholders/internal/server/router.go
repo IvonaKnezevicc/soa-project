@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"soa-project/stakeholders/internal/controller"
 	"soa-project/stakeholders/internal/middleware"
 )
@@ -33,5 +34,6 @@ func NewRouter(
 	mux.HandleFunc("/api/stakeholders/users", authMiddleware.RequireAuth(roleMiddleware.RequireRole("admin", userController.GetUsers)))
 	mux.HandleFunc("/api/stakeholders/users/block", authMiddleware.RequireAuth(roleMiddleware.RequireRole("admin", userController.BlockUser)))
 
-	return corsMiddleware.Handler(mux)
+	instrumentedMux := otelhttp.NewHandler(mux, "stakeholders-http")
+	return corsMiddleware.Handler(instrumentedMux)
 }

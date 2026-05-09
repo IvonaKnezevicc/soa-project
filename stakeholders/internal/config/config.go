@@ -20,6 +20,8 @@ type Config struct {
 	JWTSecret            string
 	JWTIssuer            string
 	JWTExpirationMinutes int
+	OTELServiceName      string
+	OTELEndpoint         string
 }
 
 func Load() (*Config, error) {
@@ -36,6 +38,8 @@ func Load() (*Config, error) {
 		JWTSecret:            getEnv("JWT_SECRET", ""),
 		JWTIssuer:            getEnv("JWT_ISSUER", "stakeholders-service"),
 		JWTExpirationMinutes: getEnvAsInt("JWT_EXPIRATION_MINUTES", 60),
+		OTELServiceName:      getEnv("OTEL_SERVICE_NAME", "stakeholders-service"),
+		OTELEndpoint:         getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "jaeger:4317"),
 	}
 
 	if cfg.Neo4jUsername == "" || cfg.Neo4jPassword == "" {
