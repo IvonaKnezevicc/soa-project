@@ -1,4 +1,13 @@
 services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: soa-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
   stakeholders-neo4j:
     image: neo4j:5
     container_name: stakeholders-neo4j
@@ -155,6 +164,7 @@ services:
     restart: unless-stopped
     depends_on:
       - tours-mongo
+      - jaeger
     ports:
       - "8083:8083"
     environment:
@@ -163,6 +173,14 @@ services:
       JWT_SECRET: "change-me"
       JWT_ISSUER: "stakeholders-service"
       PAYMENT_SERVICE_URL: "http://payment:8084"
+      OTEL_SERVICE_NAME: "tours-service"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4318/v1/traces"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_METRICS_EXPORTER: "none"
+      OTEL_LOGS_EXPORTER: "none"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_PROPAGATORS: "tracecontext,baggage"
+      OTEL_TRACES_SAMPLER: "always_on"
 
   payment:
     build:
@@ -176,6 +194,8 @@ services:
         condition: service_started
       tours:
         condition: service_started
+      jaeger:
+        condition: service_started
     ports:
       - "8084:8084"
     environment:
@@ -185,6 +205,8 @@ services:
       TOURS_SERVICE_URL: "http://tours:8083"
       TOURS_GRPC_URL: "http://tours:9093"
       CORS_ALLOWED_ORIGINS: "http://localhost:4200"
+      OTEL_SERVICE_NAME: "payment-service"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4317"
 
   front:
     build:
@@ -210,6 +232,7 @@ services:
       - follower
       - tours
       - payment
+      - jaeger
     ports:
       - "4200:80"
       - "50051:50051"

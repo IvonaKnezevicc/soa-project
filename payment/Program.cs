@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using PaymentService;
 using PaymentService.Clients;
 using PaymentService.Common;
@@ -9,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 var serverPort = GetSetting(builder.Configuration, "SERVER_PORT", "8084");
 var connectionString = GetSetting(builder.Configuration, "POSTGRES_CONNECTION_STRING", "Host=localhost;Port=5432;Database=paymentdb;Username=postgres;Password=postgres");
+var otelServiceName = GetSetting(builder.Configuration, "OTEL_SERVICE_NAME", "payment-service");
+var otelEndpoint = GetSetting(builder.Configuration, "OTEL_EXPORTER_OTLP_ENDPOINT", "http://jaeger:4317");
 var allowedOrigins = GetSetting(builder.Configuration, "CORS_ALLOWED_ORIGINS", "http://localhost:4200")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -19,6 +24,16 @@ builder.Services.AddHttpClient<IToursClient, ToursClient>(client => client.Timeo
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentCartService, PaymentCartService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService(otelServiceName))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri(otelEndpoint);
+            options.Protocol = OtlpExportProtocol.Grpc;
+        }));
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
