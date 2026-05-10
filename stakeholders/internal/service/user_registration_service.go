@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/mail"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"soa-project/stakeholders/internal/apperror"
 	"soa-project/stakeholders/internal/domain"
 	"soa-project/stakeholders/internal/dto"
+	"soa-project/stakeholders/internal/observability"
 	"soa-project/stakeholders/internal/repository"
 )
 
@@ -35,20 +37,53 @@ func NewUserRegistrationService(userRepository repository.UserRepository, paymen
 }
 
 func (s *userRegistrationService) RegisterUser(ctx context.Context, request dto.UserRegistrationRequest) (*dto.UserRegistrationResponse, error) {
+	traceID := observability.TraceIDFromContext(ctx)
+	username := strings.TrimSpace(request.Username)
+	role := normalizeRole(request.Role)
+
+	slog.InfoContext(ctx, "user registration started",
+		"traceId", traceID,
+		"username", username,
+		"role", role,
+	)
+
 	if err := validateUserRegistrationRequest(request); err != nil {
+		slog.WarnContext(ctx, "user registration validation failed",
+			"traceId", traceID,
+			"username", username,
+			"role", role,
+			"message", err.Error(),
+		)
 		return nil, err
 	}
 
 	existingUser, err := s.userRepository.FindByUsernameOrEmail(ctx, request.Username, request.Email)
 	if err != nil {
+		slog.ErrorContext(ctx, "user registration lookup failed",
+			"traceId", traceID,
+			"username", username,
+			"role", role,
+			"message", err.Error(),
+		)
 		return nil, err
 	}
 	if existingUser != nil {
+		slog.WarnContext(ctx, "user registration rejected because user already exists",
+			"traceId", traceID,
+			"username", username,
+			"role", role,
+		)
 		return nil, fmt.Errorf("%w: username or email already in use", apperror.ErrUserAlreadyExists)
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
+		slog.ErrorContext(ctx, "user registration password hashing failed",
+			"traceId", traceID,
+			"username", username,
+			"role", role,
+			"message", err.Error(),
+		)
 		return nil, err
 	}
 
@@ -68,17 +103,61 @@ func (s *userRegistrationService) RegisterUser(ctx context.Context, request dto.
 	}
 
 	if err := s.userRepository.Create(ctx, user); err != nil {
+		slog.ErrorContext(ctx, "user registration persistence failed",
+			"traceId", traceID,
+			"userId", user.ID,
+			"username", user.Username,
+			"role", user.Role,
+			"message", err.Error(),
+		)
 		return nil, err
 	}
 
+	slog.InfoContext(ctx, "user registration persisted",
+		"traceId", traceID,
+		"userId", user.ID,
+		"username", user.Username,
+		"role", user.Role,
+	)
+
 	if user.Role == domain.RoleTourist {
+		slog.InfoContext(ctx, "wallet creation requested for new tourist",
+			"traceId", traceID,
+			"userId", user.ID,
+			"username", user.Username,
+		)
 		if err := s.paymentClient.CreateWallet(ctx, user.ID); err != nil {
+			slog.ErrorContext(ctx, "wallet creation failed for new tourist",
+				"traceId", traceID,
+				"userId", user.ID,
+				"username", user.Username,
+				"message", err.Error(),
+			)
 			if rollbackErr := s.userRepository.DeleteByID(ctx, user.ID); rollbackErr != nil {
+				slog.ErrorContext(ctx, "rollback after wallet creation failure failed",
+					"traceId", traceID,
+					"userId", user.ID,
+					"username", user.Username,
+					"message", rollbackErr.Error(),
+				)
 				return nil, fmt.Errorf("wallet creation failed: %w; rollback failed: %v", err, rollbackErr)
 			}
 			return nil, fmt.Errorf("wallet creation failed: %w", err)
 		}
+
+		slog.InfoContext(ctx, "wallet created for new tourist",
+			"traceId", traceID,
+			"userId", user.ID,
+			"username", user.Username,
+		)
 	}
+
+	slog.InfoContext(ctx, "user registration completed",
+		"traceId", traceID,
+		"userId", user.ID,
+		"username", user.Username,
+		"role", user.Role,
+	)
 
 	return &dto.UserRegistrationResponse{
 		ID:        user.ID,

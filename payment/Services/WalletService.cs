@@ -17,12 +17,21 @@ public class WalletService(
         var touristId = (request.TouristId ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(touristId))
         {
+            StructuredLog.Warn("wallet creation rejected because touristId is missing");
             throw new ApiException(StatusCodes.Status400BadRequest, "touristId is required");
         }
 
+        StructuredLog.Info("wallet creation started", new Dictionary<string, object?>
+        {
+            ["touristId"] = touristId
+        });
         var existingWallet = await paymentRepository.GetWalletByTouristIdAsync(touristId, cancellationToken);
         if (existingWallet is not null)
         {
+            StructuredLog.Info("wallet already exists", new Dictionary<string, object?>
+            {
+                ["touristId"] = touristId
+            });
             return ToResponse(existingWallet);
         }
 
@@ -37,6 +46,11 @@ public class WalletService(
         };
 
         await paymentRepository.CreateWalletAsync(wallet, cancellationToken);
+        StructuredLog.Info("wallet created", new Dictionary<string, object?>
+        {
+            ["touristId"] = touristId,
+            ["balance"] = wallet.Balance
+        });
         return ToResponse(wallet);
     }
 

@@ -11,6 +11,8 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +40,7 @@ import com.soa.tours.model.TourReview;
 import com.soa.tours.model.TourStatus;
 import com.soa.tours.model.TouristPosition;
 import com.soa.tours.model.TransportType;
+import com.soa.tours.observability.ObservabilityLog;
 import com.soa.tours.repository.PurchasedTourRepository;
 import com.soa.tours.repository.TouristPositionRepository;
 import com.soa.tours.repository.TourReviewRepository;
@@ -46,6 +49,8 @@ import com.soa.tours.security.CurrentUser;
 
 @Service
 public class TourService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TourService.class);
 
     private final TourRepository tourRepository;
     private final TouristPositionRepository touristPositionRepository;
@@ -161,14 +166,22 @@ public class TourService {
     public PurchasedTourIdsResponse getPurchasedTourIds(String touristId) {
         touristId = touristId == null ? "" : touristId.trim();
         if (touristId.isEmpty()) {
+            ObservabilityLog.warn(logger, "purchased tour lookup rejected because touristId is missing", Map.of());
             throw new ApiException(HttpStatus.BAD_REQUEST, "touristId is required");
         }
+
+        ObservabilityLog.info(logger, "purchased tour lookup started", Map.of("touristId", touristId));
 
         List<String> tourIds = purchasedTourRepository.findByTouristId(touristId)
             .stream()
             .map(PurchasedTour::getTourId)
             .distinct()
             .toList();
+
+        ObservabilityLog.info(
+            logger,
+            "purchased tour lookup completed",
+            Map.of("touristId", touristId, "tourCount", tourIds.size()));
 
         return new PurchasedTourIdsResponse(touristId, tourIds);
     }

@@ -5,11 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"soa-project/stakeholders/internal/observability"
 )
 
 type PaymentClient interface {
@@ -32,10 +34,24 @@ func NewPaymentClient(baseURL string) PaymentClient {
 }
 
 func (c *paymentClient) CreateWallet(ctx context.Context, touristID string) error {
+	traceID := observability.TraceIDFromContext(ctx)
+	normalizedTouristID := strings.TrimSpace(touristID)
+
+	slog.InfoContext(ctx, "payment wallet creation HTTP request started",
+		"traceId", traceID,
+		"touristId", normalizedTouristID,
+		"targetService", "payment-service",
+	)
+
 	payload, err := json.Marshal(map[string]string{
-		"touristId": strings.TrimSpace(touristID),
+		"touristId": normalizedTouristID,
 	})
 	if err != nil {
+		slog.ErrorContext(ctx, "payment wallet creation payload encoding failed",
+			"traceId", traceID,
+			"touristId", normalizedTouristID,
+			"message", err.Error(),
+		)
 		return err
 	}
 
@@ -52,13 +68,29 @@ func (c *paymentClient) CreateWallet(ctx context.Context, touristID string) erro
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {
+		slog.ErrorContext(ctx, "payment wallet creation HTTP request failed",
+			"traceId", traceID,
+			"touristId", normalizedTouristID,
+			"message", err.Error(),
+		)
 		return err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusCreated && response.StatusCode != http.StatusOK {
+		slog.WarnContext(ctx, "payment wallet creation rejected by payment service",
+			"traceId", traceID,
+			"touristId", normalizedTouristID,
+			"statusCode", response.StatusCode,
+		)
 		return fmt.Errorf("payment service returned status %d", response.StatusCode)
 	}
+
+	slog.InfoContext(ctx, "payment wallet creation HTTP request completed",
+		"traceId", traceID,
+		"touristId", normalizedTouristID,
+		"statusCode", response.StatusCode,
+	)
 
 	return nil
 }

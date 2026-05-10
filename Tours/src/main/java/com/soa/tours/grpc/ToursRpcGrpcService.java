@@ -3,17 +3,21 @@ package com.soa.tours.grpc;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.soa.tours.model.PurchasedTour;
 import com.soa.tours.model.KeyPoint;
 import com.soa.tours.model.Tour;
 import com.soa.tours.model.TourStatus;
+import com.soa.tours.observability.ObservabilityLog;
 import com.soa.tours.repository.PurchasedTourRepository;
 import com.soa.tours.repository.TourRepository;
 import com.soa.tours.service.TourExecutionService;
@@ -26,6 +30,8 @@ import net.devh.boot.grpc.server.service.GrpcService;
 @GrpcService
 @Service
 public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImplBase {
+
+    private static final Logger logger = LoggerFactory.getLogger(ToursRpcGrpcService.class);
 
     private final TourRepository tourRepository;
     private final PurchasedTourRepository purchasedTourRepository;
@@ -160,6 +166,11 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
             .distinct()
             .toList();
 
+        ObservabilityLog.info(
+            logger,
+            "purchase validation started",
+            Map.of("tourIds", requestedTourIds, "tourCount", requestedTourIds.size()));
+
         List<Tour> tours = tourRepository.findAllById(requestedTourIds);
         GetToursForPurchaseResponse.Builder responseBuilder = GetToursForPurchaseResponse.newBuilder();
 
@@ -169,6 +180,10 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
                 .findFirst();
 
             if (maybeTour.isEmpty()) {
+                ObservabilityLog.warn(
+                    logger,
+                    "purchase validation found missing tour",
+                    Map.of("tourId", requestedTourId));
                 responseBuilder.addTours(TourForPurchase.newBuilder()
                     .setId(requestedTourId)
                     .setExists(false)
@@ -177,6 +192,12 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
             }
 
             Tour tour = maybeTour.get();
+            if (tour.getStatus() != TourStatus.PUBLISHED) {
+                ObservabilityLog.warn(
+                    logger,
+                    "purchase validation found unavailable tour",
+                    Map.of("tourId", tour.getId(), "status", tour.getStatus() == null ? "" : tour.getStatus().getValue()));
+            }
             responseBuilder.addTours(TourForPurchase.newBuilder()
                 .setId(valueOrEmpty(tour.getId()))
                 .setName(valueOrEmpty(tour.getName()))
@@ -186,6 +207,10 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
                 .build());
         }
 
+        ObservabilityLog.info(
+            logger,
+            "purchase validation completed",
+            Map.of("tourCount", requestedTourIds.size()));
         responseObserver.onNext(responseBuilder.build());
         responseObserver.onCompleted();
     }
@@ -202,7 +227,13 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
             .distinct()
             .toList();
 
+        ObservabilityLog.info(
+            logger,
+            "purchase creation started",
+            Map.of("touristId", touristId, "tourIds", requestedTourIds, "tourCount", requestedTourIds.size()));
+
         if (touristId.isEmpty()) {
+            ObservabilityLog.warn(logger, "purchase creation rejected because touristId is missing", Map.of());
             responseObserver.onNext(CreatePurchasedToursRpcResponse.newBuilder()
                 .setSuccess(false)
                 .setMessage("tourist_id is required")
@@ -212,6 +243,7 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
         }
 
         if (requestedTourIds.isEmpty()) {
+            ObservabilityLog.warn(logger, "purchase creation rejected because no tour ids were supplied", Map.of("touristId", touristId));
             responseObserver.onNext(CreatePurchasedToursRpcResponse.newBuilder()
                 .setSuccess(false)
                 .setMessage("tour_ids are required")
@@ -222,6 +254,10 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
 
         List<Tour> tours = tourRepository.findAllById(requestedTourIds);
         if (tours.size() != requestedTourIds.size()) {
+            ObservabilityLog.warn(
+                logger,
+                "purchase creation rejected because one or more tours no longer exist",
+                Map.of("touristId", touristId, "requestedCount", requestedTourIds.size(), "foundCount", tours.size()));
             responseObserver.onNext(CreatePurchasedToursRpcResponse.newBuilder()
                 .setSuccess(false)
                 .setMessage("one or more tours no longer exist")
@@ -232,6 +268,10 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
 
         boolean unavailableTourExists = tours.stream().anyMatch(item -> item.getStatus() != TourStatus.PUBLISHED);
         if (unavailableTourExists) {
+            ObservabilityLog.warn(
+                logger,
+                "purchase creation rejected because one or more tours are unavailable",
+                Map.of("touristId", touristId, "tourIds", requestedTourIds));
             responseObserver.onNext(CreatePurchasedToursRpcResponse.newBuilder()
                 .setSuccess(false)
                 .setMessage("one or more tours are no longer available for purchase")
@@ -261,6 +301,11 @@ public class ToursRpcGrpcService extends ToursRpcServiceGrpc.ToursRpcServiceImpl
         if (!newPurchases.isEmpty()) {
             purchasedTourRepository.saveAll(newPurchases);
         }
+
+        ObservabilityLog.info(
+            logger,
+            "purchase creation completed",
+            Map.of("touristId", touristId, "createdCount", newPurchases.size(), "tourIds", requestedTourIds));
 
         responseObserver.onNext(CreatePurchasedToursRpcResponse.newBuilder()
             .setSuccess(true)
