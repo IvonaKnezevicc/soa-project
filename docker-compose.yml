@@ -8,6 +8,45 @@ services:
       - "4317:4317"
       - "4318:4318"
 
+  loki:
+    image: grafana/loki:3.1.1
+    container_name: soa-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/config.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki-config.yml:/etc/loki/config.yml:ro
+      - loki_data:/loki
+
+  promtail:
+    image: grafana/promtail:3.1.1
+    container_name: soa-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    volumes:
+      - ./observability/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: soa-grafana
+    restart: unless-stopped
+    depends_on:
+      - loki
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: "admin"
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - grafana_data:/var/lib/grafana
+
   stakeholders-neo4j:
     image: neo4j:5
     container_name: stakeholders-neo4j
@@ -237,6 +276,8 @@ services:
       - tours
       - payment
       - jaeger
+      - loki
+      - grafana
     ports:
       - "4200:80"
       - "50051:50051"
@@ -250,3 +291,5 @@ volumes:
   follower_neo4j_logs:
   tours_mongo_data:
   payment_postgres_data:
+  loki_data:
+  grafana_data:

@@ -102,8 +102,18 @@ public class PaymentCartService(
         var cart = await paymentRepository.GetCartByTouristIdAsync(identity.UserId, cancellationToken);
         if (cart is null || cart.Items.Count == 0)
         {
+            StructuredLog.Warn("checkout rejected because shopping cart is empty", new Dictionary<string, object?>
+            {
+                ["userId"] = identity.UserId
+            });
             throw new ApiException(StatusCodes.Status400BadRequest, "shopping cart is empty");
         }
+
+        StructuredLog.Info("checkout started", new Dictionary<string, object?>
+        {
+            ["userId"] = identity.UserId,
+            ["itemCount"] = cart.Items.Count
+        });
 
         var purchasedTourIds = await toursClient.GetPurchasedTourIdsAsync(identity.UserId, cancellationToken);
 
@@ -112,16 +122,32 @@ public class PaymentCartService(
             var tour = await toursClient.GetTourForPurchaseAsync(item.TourId, cancellationToken);
             if (tour is null)
             {
+                StructuredLog.Warn("checkout rejected because tour no longer exists", new Dictionary<string, object?>
+                {
+                    ["userId"] = identity.UserId,
+                    ["tourId"] = item.TourId
+                });
                 throw new ApiException(StatusCodes.Status400BadRequest, $"tour '{item.TourId}' no longer exists");
             }
 
             if (!string.Equals(tour.Status, "published", StringComparison.OrdinalIgnoreCase))
             {
+                StructuredLog.Warn("checkout rejected because tour is unavailable", new Dictionary<string, object?>
+                {
+                    ["userId"] = identity.UserId,
+                    ["tourId"] = tour.Id,
+                    ["tourStatus"] = tour.Status
+                });
                 throw new ApiException(StatusCodes.Status400BadRequest, $"tour '{tour.Name}' is no longer available for purchase");
             }
 
             if (purchasedTourIds.Contains(item.TourId))
             {
+                StructuredLog.Warn("checkout rejected because tour is already purchased", new Dictionary<string, object?>
+                {
+                    ["userId"] = identity.UserId,
+                    ["tourId"] = item.TourId
+                });
                 throw new ApiException(StatusCodes.Status400BadRequest, $"tour '{tour.Name}' is already purchased");
             }
         }
@@ -131,10 +157,20 @@ public class PaymentCartService(
         var wallet = await paymentRepository.GetWalletByTouristIdAsync(identity.UserId, cancellationToken);
         if (wallet is null)
         {
+            StructuredLog.Warn("checkout rejected because wallet was not found", new Dictionary<string, object?>
+            {
+                ["userId"] = identity.UserId
+            });
             throw new ApiException(StatusCodes.Status400BadRequest, "wallet not found");
         }
         if (wallet.Balance < totalPrice)
         {
+            StructuredLog.Warn("checkout rejected because wallet balance is insufficient", new Dictionary<string, object?>
+            {
+                ["userId"] = identity.UserId,
+                ["balance"] = wallet.Balance,
+                ["totalPrice"] = totalPrice
+            });
             throw new ApiException(StatusCodes.Status400BadRequest, "You do not have enough money in your wallet for this purchase.");
         }
 
@@ -143,6 +179,12 @@ public class PaymentCartService(
 
         try
         {
+            StructuredLog.Info("checkout validation completed", new Dictionary<string, object?>
+            {
+                ["userId"] = identity.UserId,
+                ["totalPrice"] = totalPrice
+            });
+
             wallet.Balance -= totalPrice;
             wallet.UpdatedAt = purchasedAt;
             await paymentRepository.SaveChangesAsync(cancellationToken);
@@ -153,6 +195,11 @@ public class PaymentCartService(
             }
             catch
             {
+                StructuredLog.Error("checkout failed while creating purchased tours", new Dictionary<string, object?>
+                {
+                    ["userId"] = identity.UserId,
+                    ["tourIds"] = cartTourIds
+                });
                 wallet.Balance += totalPrice;
                 wallet.UpdatedAt = DateTime.UtcNow;
                 await paymentRepository.SaveChangesAsync(cancellationToken);
@@ -171,15 +218,31 @@ public class PaymentCartService(
                 }
                 catch
                 {
+                    StructuredLog.Error("checkout compensation failed after purchase creation", new Dictionary<string, object?>
+                    {
+                        ["userId"] = identity.UserId,
+                        ["tourIds"] = cartTourIds
+                    });
                     throw new ApiException(StatusCodes.Status500InternalServerError, "checkout compensation failed after purchase creation");
                 }
 
+                StructuredLog.Error("checkout finalization failed after purchase creation", new Dictionary<string, object?>
+                {
+                    ["userId"] = identity.UserId,
+                    ["tourIds"] = cartTourIds
+                });
                 wallet.Balance += totalPrice;
                 wallet.UpdatedAt = DateTime.UtcNow;
                 await paymentRepository.SaveChangesAsync(cancellationToken);
                 throw new ApiException(StatusCodes.Status500InternalServerError, "checkout failed after purchase creation");
             }
 
+            StructuredLog.Info("checkout completed", new Dictionary<string, object?>
+            {
+                ["userId"] = identity.UserId,
+                ["purchasedItemCount"] = purchasedItemCount,
+                ["totalPrice"] = totalPrice
+            });
             return new CheckoutResponse(purchasedItemCount, purchasedAt);
         }
         catch (ApiException)
@@ -188,6 +251,10 @@ public class PaymentCartService(
         }
         catch
         {
+            StructuredLog.Error("checkout failed unexpectedly", new Dictionary<string, object?>
+            {
+                ["userId"] = identity.UserId
+            });
             throw new ApiException(StatusCodes.Status500InternalServerError, "checkout failed");
         }
     }

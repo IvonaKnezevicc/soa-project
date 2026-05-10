@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -16,6 +17,13 @@ var otelServiceName = GetSetting(builder.Configuration, "OTEL_SERVICE_NAME", "pa
 var otelEndpoint = GetSetting(builder.Configuration, "OTEL_EXPORTER_OTLP_ENDPOINT", "http://jaeger:4317");
 var allowedOrigins = GetSetting(builder.Configuration, "CORS_ALLOWED_ORIGINS", "http://localhost:4200")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+builder.Logging.ClearProviders();
+builder.Logging.Configure(options =>
+{
+    options.ActivityTrackingOptions = ActivityTrackingOptions.TraceId | ActivityTrackingOptions.SpanId | ActivityTrackingOptions.ParentId;
+});
+builder.Logging.AddJsonConsole();
 
 builder.Services.AddDbContext<PaymentDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddControllers();
