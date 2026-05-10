@@ -67,6 +67,13 @@ public class TourController {
         return tourService.getPublishedTours(currentUser);
     }
 
+    @GetMapping("/purchased/me")
+    public List<TourResponse> getMyPurchasedTours(
+        @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser
+    ) {
+        return tourService.getPurchasedTours(currentUser);
+    }
+
     @GetMapping("/position/me")
     public TouristPositionResponse getMyPosition(
         @RequestAttribute(JwtAuthenticationInterceptor.CURRENT_USER_ATTRIBUTE) CurrentUser currentUser

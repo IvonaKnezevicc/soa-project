@@ -135,7 +135,7 @@ public class PaymentCartService(
         }
         if (wallet.Balance < totalPrice)
         {
-            throw new ApiException(StatusCodes.Status400BadRequest, "insufficient wallet balance");
+            throw new ApiException(StatusCodes.Status400BadRequest, "You do not have enough money in your wallet for this purchase.");
         }
 
         var purchasedAt = DateTime.UtcNow;

@@ -30,6 +30,10 @@ export class ToursService {
     return this.http.get<Tour[]>(`${this.baseUrl}/published`);
   }
 
+  getMyPurchasedTours(): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.baseUrl}/purchased/me`);
+  }
+
   getTourById(tourId: string): Observable<Tour> {
     return this.http.get<Tour>(`${this.baseUrl}/${encodeURIComponent(tourId)}`);
   }

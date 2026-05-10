@@ -119,6 +119,33 @@ public class TourService {
             .toList();
     }
 
+    public List<TourResponse> getPurchasedTours(CurrentUser currentUser) {
+        if (!"tourist".equals(currentUser.getRole())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "only tourist users can view purchased tours");
+        }
+
+        List<PurchasedTour> purchasedTours = purchasedTourRepository.findByTouristId(currentUser.getUserId());
+        if (purchasedTours.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> purchasedTourIdsInOrder = purchasedTours.stream()
+            .map(PurchasedTour::getTourId)
+            .distinct()
+            .toList();
+
+        Map<String, Tour> toursById = tourRepository.findAllById(purchasedTourIdsInOrder)
+            .stream()
+            .filter(tour -> tour.getStatus() == TourStatus.PUBLISHED || tour.getStatus() == TourStatus.ARCHIVED)
+            .collect(Collectors.toMap(Tour::getId, Function.identity()));
+
+        return purchasedTourIdsInOrder.stream()
+            .map(toursById::get)
+            .filter(tour -> tour != null)
+            .map(tour -> toTouristResponse(tour, true))
+            .toList();
+    }
+
     public com.soa.tours.dto.TourPurchaseInfoResponse getTourPurchaseInfo(String tourId) {
         Tour tour = tourRepository.findById(tourId)
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "tour not found"));
@@ -376,6 +403,17 @@ public class TourService {
 
         if (tour.getStatus() == TourStatus.PUBLISHED) {
             return tour;
+        }
+
+        if ("tourist".equals(currentUser.getRole()) && tour.getStatus() == TourStatus.ARCHIVED) {
+            boolean purchasedByCurrentUser = purchasedTourRepository.findByTouristIdAndTourIdIn(
+                currentUser.getUserId(),
+                List.of(tourId)
+            ).stream().anyMatch(item -> tourId.equals(item.getTourId()));
+
+            if (purchasedByCurrentUser) {
+                return tour;
+            }
         }
 
         if ("guide".equals(currentUser.getRole()) && tour.getAuthorUsername().equals(currentUser.getUsername())) {

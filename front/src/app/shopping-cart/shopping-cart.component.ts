@@ -65,10 +65,50 @@ export class ShoppingCartComponent implements OnInit {
         window.setTimeout(() => this.router.navigate(['/tourist/my-tours']), 700);
       },
       error: (error) => {
-        this.errorMessage = error?.error?.message ?? 'Checkout failed.';
-        this.isCheckingOut = false;
+        const backendMessage = this.extractErrorMessage(error);
+        if (backendMessage) {
+          this.errorMessage = backendMessage.includes('no longer available for purchase')
+            ? 'Check whether the selected tours are still available before checkout, because some of them may no longer be purchasable.'
+            : backendMessage;
+          this.isCheckingOut = false;
+          return;
+        }
+
+        this.paymentService.getMyWallet().subscribe({
+          next: (wallet) => {
+            this.errorMessage = `Checkout failed. Check your wallet balance. Current balance: ${wallet.balance.toFixed(2)}.`;
+            this.isCheckingOut = false;
+          },
+          error: () => {
+            this.errorMessage = 'Checkout failed. Check your wallet balance.';
+            this.isCheckingOut = false;
+          }
+        });
       }
     });
+  }
+
+  private extractErrorMessage(error: unknown): string {
+    const payload = (error as { error?: unknown } | null)?.error;
+    if (!payload) {
+      return '';
+    }
+
+    if (typeof payload === 'string') {
+      try {
+        const parsed = JSON.parse(payload) as { message?: string; Message?: string };
+        return parsed.message ?? parsed.Message ?? payload;
+      } catch {
+        return payload;
+      }
+    }
+
+    if (typeof payload === 'object') {
+      const objectPayload = payload as { message?: string; Message?: string };
+      return objectPayload.message ?? objectPayload.Message ?? '';
+    }
+
+    return '';
   }
 
   private loadCart(): void {

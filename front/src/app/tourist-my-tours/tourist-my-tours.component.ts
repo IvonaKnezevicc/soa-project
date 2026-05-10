@@ -40,9 +40,9 @@ export class TouristMyToursComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.toursService.getPublishedTours().subscribe({
+    this.toursService.getMyPurchasedTours().subscribe({
       next: (tours) => {
-        this.tours = tours.filter((tour) => tour.purchasedByCurrentUser);
+        this.tours = tours;
         this.isLoading = false;
       },
       error: (error) => {
