@@ -5,6 +5,13 @@
   margin: 0 auto;
 }
 
+.profile-page.no-access {
+  height: calc(100vh - 73px - 4rem);
+  max-width: 520px;
+  align-content: center;
+  overflow: hidden;
+}
+
 .status-card {
   padding: 1.5rem;
   border-radius: 22px;
@@ -17,6 +24,10 @@
 .status-card h2 {
   margin: 0;
   font-size: 2rem;
+}
+
+.compact-card {
+  padding: 2rem 1.5rem;
 }
 
 .card-header {

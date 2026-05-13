@@ -1,4 +1,4 @@
-<section class="profile-page" *ngIf="currentUser$ | async as user">
+<section class="profile-page" [class.no-access]="!profileAllowed" *ngIf="currentUser$ | async as user">
   <div class="status-card" *ngIf="profileAllowed; else noProfileAccess">
     <div class="card-header">
       <h2>My profile</h2>
@@ -72,9 +72,8 @@
   </div>
 
   <ng-template #noProfileAccess>
-    <div class="status-card">
-      <h2>Profile unavailable</h2>
-      <p>Profile management is available only for guide and tourist users.</p>
+    <div class="status-card compact-card">
+      <h2>Profile unavaliable</h2>
     </div>
   </ng-template>
 </section>
