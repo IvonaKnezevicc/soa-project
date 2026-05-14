@@ -31,6 +31,7 @@ func NewRouter(
 		}
 	}))
 	mux.HandleFunc("/api/stakeholders/users/logout", authMiddleware.RequireAuth(userController.LogoutUser))
+	mux.HandleFunc("/api/stakeholders/users/search", authMiddleware.RequireAuth(userController.SearchUsers))
 	mux.HandleFunc("/api/stakeholders/users", authMiddleware.RequireAuth(roleMiddleware.RequireRole("admin", userController.GetUsers)))
 	mux.HandleFunc("/api/stakeholders/users/block", authMiddleware.RequireAuth(roleMiddleware.RequireRole("admin", userController.BlockUser)))
 

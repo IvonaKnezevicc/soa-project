@@ -53,7 +53,17 @@
         <input id="lastName" type="text" formControlName="lastName" />
 
         <label for="profileImageFile">Profile image</label>
-        <input id="profileImageFile" type="file" accept="image/*" (change)="onImageSelected($event)" />
+        <input #profileImageInput id="profileImageFile" type="file" accept="image/*" (change)="onImageSelected($event)" />
+        <div class="image-preview-card" *ngIf="form.controls.profileImage.value">
+          <img [src]="form.controls.profileImage.value" alt="Selected profile image" class="preview-image" />
+          <button
+            type="button"
+            class="remove-image-button"
+            (click)="removeProfileImage(profileImageInput)"
+            aria-label="Remove selected profile image">
+            ×
+          </button>
+        </div>
 
         <label for="biography">Biography</label>
         <textarea id="biography" rows="4" formControlName="biography"></textarea>

@@ -29,6 +29,28 @@ form {
   margin-top: 1rem;
 }
 
+.label-with-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+}
+
+.info-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f7e8ee;
+  color: #8b1e3f;
+  border: 1px solid #e9c8d4;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: help;
+}
+
 label {
   font-weight: 600;
 }
@@ -56,6 +78,49 @@ button {
 button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.selected-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.85rem;
+}
+
+.selected-image-card {
+  position: relative;
+}
+
+.selected-image-preview {
+  display: block;
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.selected-image-name {
+  margin: 0.45rem 0 0;
+  font-size: 0.9rem;
+  color: #475569;
+  word-break: break-word;
+}
+
+.remove-image-button {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(139, 30, 63, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
 .created-post {

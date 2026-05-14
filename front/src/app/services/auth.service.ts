@@ -70,6 +70,10 @@ export class AuthService {
     return this.http.get<UserProfile>(`${this.baseUrl}/profile`);
   }
 
+  getCurrentUserSnapshot(): User | null {
+    return this.currentUserSubject.value;
+  }
+
   updateMyProfile(payload: UpdateUserProfileRequest): Observable<UserProfile> {
     return this.http.put<UserProfile>(`${this.baseUrl}/profile`, payload);
   }

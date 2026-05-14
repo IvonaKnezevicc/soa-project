@@ -18,6 +18,8 @@ import { HomeActionsService } from '../services/home-actions.service';
 export class HomeComponent implements OnInit {
   readonly currentUser$: Observable<User | null>;
   posts: BlogPostView[] = [];
+  selectedPost: BlogPostView | null = null;
+  selectedPostImageIndex = 0;
   selectedImages: string[] = [];
   selectedImageNames: string[] = [];
   commentTexts: Record<string, string> = {};
@@ -34,6 +36,7 @@ export class HomeComponent implements OnInit {
   isCreateOpen = false;
   errorMessage = '';
   createErrorMessage = '';
+  readonly markdownHint = 'For bold use **bold**, for headings use ## heading, and for lists use - item.';
 
   readonly form = this.formBuilder.group({
     title: ['', [Validators.required, Validators.maxLength(200)]],
@@ -165,6 +168,41 @@ export class HomeComponent implements OnInit {
     this.commentTexts[postId] = value;
   }
 
+  openPost(post: BlogPostView): void {
+    this.selectedPost = post;
+    this.selectedPostImageIndex = 0;
+  }
+
+  closePost(): void {
+    this.selectedPost = null;
+    this.selectedPostImageIndex = 0;
+  }
+
+  previousPostImage(): void {
+    if (!this.selectedPost || this.selectedPost.imageUrls.length <= 1) {
+      return;
+    }
+
+    const length = this.selectedPost.imageUrls.length;
+    this.selectedPostImageIndex = (this.selectedPostImageIndex - 1 + length) % length;
+  }
+
+  nextPostImage(): void {
+    if (!this.selectedPost || this.selectedPost.imageUrls.length <= 1) {
+      return;
+    }
+
+    this.selectedPostImageIndex = (this.selectedPostImageIndex + 1) % this.selectedPost.imageUrls.length;
+  }
+
+  removeSelectedImage(index: number, input?: HTMLInputElement): void {
+    this.selectedImages = this.selectedImages.filter((_, imageIndex) => imageIndex !== index);
+    this.selectedImageNames = this.selectedImageNames.filter((_, imageIndex) => imageIndex !== index);
+    if (input) {
+      input.value = '';
+    }
+  }
+
   submitComment(postId: string): void {
     const text = (this.commentTexts[postId] ?? '').trim();
     this.commentErrorMessages[postId] = '';
@@ -224,6 +262,10 @@ export class HomeComponent implements OnInit {
         likedByCurrentUser: !likedByCurrentUser
       };
     });
+
+    if (this.selectedPost?.id === postId) {
+      this.selectedPost = this.posts.find((post) => post.id === postId) ?? null;
+    }
   }
 
   private addCommentToPost(postId: string, comment: CommentResponse): void {
@@ -237,6 +279,10 @@ export class HomeComponent implements OnInit {
         comments: [...post.comments, comment]
       };
     });
+
+    if (this.selectedPost?.id === postId) {
+      this.selectedPost = this.posts.find((post) => post.id === postId) ?? null;
+    }
   }
 
   private loadFollowing(): void {

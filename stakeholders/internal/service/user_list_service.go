@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"soa-project/stakeholders/internal/apperror"
@@ -15,6 +16,7 @@ const usersPageSize = 15
 
 type UserListService interface {
 	GetPagedUsers(ctx context.Context, page int, status string) (*dto.PagedUsersResponse, error)
+	SearchUsers(ctx context.Context, role, prefix, excludeUsername string, limit int) (*dto.UserSearchResponse, error)
 }
 
 type userListService struct {
@@ -63,6 +65,36 @@ func (s *userListService) GetPagedUsers(ctx context.Context, page int, status st
 		TotalPages: totalPages,
 		Status:     status,
 	}, nil
+}
+
+func (s *userListService) SearchUsers(
+	ctx context.Context,
+	role, prefix, excludeUsername string,
+	limit int,
+) (*dto.UserSearchResponse, error) {
+	normalizedRole := strings.ToLower(strings.TrimSpace(role))
+	if normalizedRole != "" && normalizedRole != "guide" && normalizedRole != "tourist" {
+		return nil, fmt.Errorf("%w: role must be guide, tourist or empty", apperror.ErrValidation)
+	}
+
+	if limit < 1 {
+		return nil, fmt.Errorf("%w: limit must be greater than 0", apperror.ErrValidation)
+	}
+
+	users, err := s.userRepository.SearchActiveByRoleAndUsernamePrefix(ctx, normalizedRole, prefix, excludeUsername, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]dto.UserSearchItem, 0, len(users))
+	for _, user := range users {
+		items = append(items, dto.UserSearchItem{
+			Username: user.Username,
+			Role:     user.Role,
+		})
+	}
+
+	return &dto.UserSearchResponse{Items: items}, nil
 }
 
 func blockedAtLabel(blockedAt *time.Time) string {

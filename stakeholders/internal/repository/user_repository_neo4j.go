@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -178,6 +179,59 @@ func (r *Neo4jUserRepository) FindAllPaged(ctx context.Context, page, pageSize i
 	}
 
 	return users, totalCount, nil
+}
+
+func (r *Neo4jUserRepository) SearchActiveByRoleAndUsernamePrefix(
+	ctx context.Context,
+	role, prefix, excludeUsername string,
+	limit int,
+) ([]domain.User, error) {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: r.database})
+	defer session.Close(ctx)
+
+	normalizedRole := strings.ToLower(strings.TrimSpace(role))
+	normalizedPrefix := strings.ToLower(strings.TrimSpace(prefix))
+	normalizedExclude := strings.ToLower(strings.TrimSpace(excludeUsername))
+
+	result, err := session.Run(ctx, `
+		MATCH (u:User)
+		WHERE u.isBlocked = false
+			AND ($role = "" OR toLower(u.role) = $role)
+			AND toLower(u.username) <> $excludeUsername
+			AND ($prefix = "" OR toLower(u.username) STARTS WITH $prefix)
+		RETURN u
+		ORDER BY u.username ASC
+		LIMIT $limit
+	`, map[string]any{
+		"role":            normalizedRole,
+		"prefix":          normalizedPrefix,
+		"excludeUsername": normalizedExclude,
+		"limit":           limit,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	users := make([]domain.User, 0, limit)
+	for result.Next(ctx) {
+		node, err := getUserNode(result.Record())
+		if err != nil {
+			return nil, err
+		}
+
+		user, err := mapNodeToUser(node)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, *user)
+	}
+
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (r *Neo4jUserRepository) Create(ctx context.Context, user *domain.User) error {

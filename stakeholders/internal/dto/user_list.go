@@ -17,3 +17,12 @@ type PagedUsersResponse struct {
 	TotalPages int            `json:"totalPages"`
 	Status     string         `json:"status"`
 }
+
+type UserSearchItem struct {
+	Username string `json:"username"`
+	Role     string `json:"role"`
+}
+
+type UserSearchResponse struct {
+	Items []UserSearchItem `json:"items"`
+}
