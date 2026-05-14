@@ -63,7 +63,10 @@
   <div class="tour-list" *ngIf="!isLoading && !errorMessage && visibleTours.length; else emptyState">
     <article class="tour-card" *ngFor="let tour of visibleTours">
       <div class="tour-topline">
-        <span class="difficulty-pill">{{ tour.difficulty }}</span>
+        <div class="tour-heading">
+          <h2>{{ tour.name }}</h2>
+          <span class="difficulty-pill">{{ tour.difficulty }}</span>
+        </div>
         <div class="tour-actions">
           <button
             type="button"
@@ -94,7 +97,6 @@
         </div>
       </div>
 
-      <h2>{{ tour.name }}</h2>
       <p class="tour-description">{{ tour.description }}</p>
 
       <div class="tag-row" *ngIf="tour.durations.length">
