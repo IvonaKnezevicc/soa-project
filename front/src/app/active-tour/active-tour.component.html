@@ -4,6 +4,10 @@
   <p class="page-message success" *ngIf="successMessage">{{ successMessage }}</p>
 
   <ng-container *ngIf="tour && execution && !isLoading">
+    <button *ngIf="detailContext === 'my-tours'" type="button" class="back-arrow-button" (click)="backToDetails()">
+      ← Back to Tour
+    </button>
+
     <div class="page-header">
       <div>
         <h1>{{ tour.name }}</h1>
@@ -37,7 +41,6 @@
       </div>
 
       <div class="action-row">
-        <button type="button" class="secondary-button" (click)="backToDetails()">Details</button>
         <button type="button" class="secondary-button" (click)="checkProgress()" [disabled]="isChecking || execution.status !== 'active'">
           {{ isChecking ? 'Checking...' : 'Check progress' }}
         </button>

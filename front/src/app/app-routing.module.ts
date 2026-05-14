@@ -6,7 +6,6 @@ import { ActiveTourComponent } from './active-tour/active-tour.component';
 import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CreateTourComponent } from './create-tour/create-tour.component';
-import { ExploreToursComponent } from './explore-tours/explore-tours.component';
 import { FindToursComponent } from './find-tours/find-tours.component';
 import { HomeComponent } from './home/home.component';
 import { FindUsersComponent } from './find-users/find-users.component';
@@ -34,10 +33,12 @@ const routes: Routes = [
   { path: 'my-tours', component: MyToursComponent, canActivate: [authGuard, guideGuard] },
   { path: 'my-tours/:id/key-points', component: TourKeyPointsComponent, canActivate: [authGuard, guideGuard] },
   { path: 'find-tours', component: FindToursComponent, canActivate: [authGuard, touristGuard] },
+  { path: 'find-tours/:id', component: TourDetailsComponent, canActivate: [authGuard, touristGuard], data: { context: 'find-tours' } },
   { path: 'tourist/my-tours', component: TouristMyToursComponent, canActivate: [authGuard, touristGuard] },
+  { path: 'tourist/my-tours/:id', component: TourDetailsComponent, canActivate: [authGuard, touristGuard], data: { context: 'my-tours' } },
+  { path: 'tourist/my-tours/:id/active', component: ActiveTourComponent, canActivate: [authGuard, touristGuard], data: { context: 'my-tours' } },
   { path: 'tours/:id/active', component: ActiveTourComponent, canActivate: [authGuard, touristGuard] },
   { path: 'tours/:id', component: TourDetailsComponent, canActivate: [authGuard, touristGuard] },
-  { path: 'tours', component: ExploreToursComponent, canActivate: [authGuard, touristGuard] },
   { path: 'shopping-cart', component: ShoppingCartComponent, canActivate: [authGuard, touristGuard] },
   { path: 'position-simulator', component: PositionSimulatorComponent, canActivate: [authGuard, touristGuard] },
   { path: 'dashboard', component: HomeComponent, canActivate: [authGuard] },

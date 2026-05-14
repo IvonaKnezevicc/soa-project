@@ -1,6 +1,8 @@
 .shopping-cart-page {
   display: grid;
   gap: 1.5rem;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .page-header,

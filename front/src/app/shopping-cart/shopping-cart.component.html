@@ -20,7 +20,6 @@
       <article class="cart-item" *ngFor="let item of currentCart.items">
         <div>
           <h2>{{ item.tourName }}</h2>
-          <p>Tour ID: {{ item.tourId }}</p>
         </div>
         <div class="cart-item-actions">
           <strong>{{ item.price | number:'1.2-2' }}</strong>
