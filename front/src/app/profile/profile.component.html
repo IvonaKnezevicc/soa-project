@@ -1,4 +1,4 @@
-<section class="profile-page" *ngIf="currentUser$ | async as user">
+<section class="profile-page" [class.no-access]="!profileAllowed" *ngIf="currentUser$ | async as user">
   <div class="status-card" *ngIf="profileAllowed; else noProfileAccess">
     <div class="card-header">
       <h2>My profile</h2>
@@ -53,7 +53,17 @@
         <input id="lastName" type="text" formControlName="lastName" />
 
         <label for="profileImageFile">Profile image</label>
-        <input id="profileImageFile" type="file" accept="image/*" (change)="onImageSelected($event)" />
+        <input #profileImageInput id="profileImageFile" type="file" accept="image/*" (change)="onImageSelected($event)" />
+        <div class="image-preview-card" *ngIf="form.controls.profileImage.value">
+          <img [src]="form.controls.profileImage.value" alt="Selected profile image" class="preview-image" />
+          <button
+            type="button"
+            class="remove-image-button"
+            (click)="removeProfileImage(profileImageInput)"
+            aria-label="Remove selected profile image">
+            ×
+          </button>
+        </div>
 
         <label for="biography">Biography</label>
         <textarea id="biography" rows="4" formControlName="biography"></textarea>
@@ -72,9 +82,8 @@
   </div>
 
   <ng-template #noProfileAccess>
-    <div class="status-card">
-      <h2>Profile unavailable</h2>
-      <p>Profile management is available only for guide and tourist users.</p>
+    <div class="status-card compact-card">
+      <h2>Profile unavaliable</h2>
     </div>
   </ng-template>
 </section>

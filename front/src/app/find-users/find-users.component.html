@@ -3,13 +3,28 @@
     <h3>Find users</h3>
 
     <div class="follow-input-row">
-      <input
-        type="text"
-        [value]="followInputUsername"
-        (input)="followInputUsername = $any($event.target).value"
-        placeholder="Enter username"
-      />
-      <button type="button" [disabled]="followSubmitting" (click)="follow(followInputUsername)">
+      <div class="search-box">
+        <input
+          type="text"
+          [value]="followInputUsername"
+          (input)="onSearchInput($any($event.target).value)"
+          placeholder="Enter username"
+        />
+
+        <div class="search-dropdown" *ngIf="searchResults.length > 0 || searchLoading">
+          <p class="search-state" *ngIf="searchLoading">Searching users...</p>
+          <button
+            type="button"
+            class="search-result"
+            *ngFor="let item of searchResults"
+            (click)="selectSearchResult(item.username)"
+          >
+            {{ item.username }}
+          </button>
+        </div>
+      </div>
+
+      <button type="button" [disabled]="followSubmitting || !followInputUsername.trim()" (click)="follow(followInputUsername)">
         {{ followSubmitting ? 'Following...' : 'Follow' }}
       </button>
     </div>

@@ -12,11 +12,6 @@
   gap: 1rem;
 }
 
-.page-header h1 {
-  margin: 0;
-  font-size: 2rem;
-}
-
 .back-link {
   display: inline-block;
   margin-bottom: 0.65rem;
@@ -93,6 +88,10 @@
   margin: 0.9rem 0 0;
   color: #475569;
   font-weight: 600;
+}
+
+.map-points-list {
+  margin-top: 1.25rem;
 }
 
 .editor-panel {
@@ -182,10 +181,12 @@
 .point-card {
   display: grid;
   gap: 0.7rem;
+  width: calc(100% - 2rem);
+  margin: 0 auto;
   border-radius: 18px;
   border: 1px solid #e9c8d4;
   background: linear-gradient(180deg, #ffffff, #fff7fa);
-  padding: 1rem;
+  padding: 0.95rem;
 }
 
 .point-card-top {
@@ -212,6 +213,8 @@
 .point-actions {
   display: flex;
   gap: 0.7rem;
+  justify-content: flex-end;
+  align-self: end;
 }
 
 .secondary-button {
@@ -222,6 +225,13 @@
 .danger-button {
   background: #fef2f2;
   color: #b91c1c;
+}
+
+.secondary-button,
+.danger-button {
+  padding: 0.45rem 0.72rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 980px) {

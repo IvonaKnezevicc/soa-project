@@ -14,21 +14,32 @@
       <label for="title">Title</label>
       <input id="title" type="text" formControlName="title" placeholder="Blog topic/title" />
 
-      <label for="descriptionMarkdown">Description (Markdown)</label>
+      <label for="descriptionMarkdown" class="label-with-info">
+        <span>Description</span>
+        <span class="info-badge" [attr.title]="markdownHint" tabindex="0">i</span>
+      </label>
       <textarea
         id="descriptionMarkdown"
         rows="8"
         formControlName="descriptionMarkdown"
-        placeholder="Use Markdown, for example: **bold**, ## heading, - list"
+        placeholder="Check info"
       ></textarea>
 
-      <label for="imageUrlsText">Image URLs (optional)</label>
-      <textarea
-        id="imageUrlsText"
-        rows="3"
-        formControlName="imageUrlsText"
-        placeholder="One URL per line, or comma separated"
-      ></textarea>
+      <label for="imagesInput">Images (optional)</label>
+      <input #imagesInput id="imagesInput" type="file" accept="image/*" multiple (change)="onImagesSelected($event)" />
+      <div class="selected-image-grid" *ngIf="selectedImages.length > 0">
+        <div class="selected-image-card" *ngFor="let image of selectedImages; let index = index">
+          <img [src]="image" alt="Selected blog image" class="selected-image-preview" />
+          <button
+            type="button"
+            class="remove-image-button"
+            (click)="removeSelectedImage(index, imagesInput)"
+            aria-label="Remove selected image">
+            ×
+          </button>
+          <p class="selected-image-name">{{ selectedImageNames[index] }}</p>
+        </div>
+      </div>
 
       <p class="error" *ngIf="createErrorMessage">{{ createErrorMessage }}</p>
       <p class="success" *ngIf="createSuccessMessage">{{ createSuccessMessage }}</p>

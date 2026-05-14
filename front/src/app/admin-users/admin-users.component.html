@@ -23,9 +23,9 @@
           <th>Username</th>
           <th>Email</th>
           <th>Role</th>
-          <th>Blocked</th>
+          <th *ngIf="selectedStatus === 'all'">Blocked</th>
           <th>Created at</th>
-          <th>Blocked at</th>
+          <th *ngIf="selectedStatus !== 'active'">Blocked at</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -34,9 +34,9 @@
           <td>{{ user.username }}</td>
           <td>{{ user.email }}</td>
           <td><span class="role-pill">{{ user.role }}</span></td>
-          <td>{{ user.isBlocked ? 'Yes' : 'No' }}</td>
+          <td *ngIf="selectedStatus === 'all'">{{ user.isBlocked ? 'Yes' : 'No' }}</td>
           <td>{{ user.createdAt | date:'medium' }}</td>
-          <td>
+          <td *ngIf="selectedStatus !== 'active'">
             <ng-container *ngIf="user.isBlocked; else activeUser">
               {{ user.blockedAt | date:'medium' }}
             </ng-container>

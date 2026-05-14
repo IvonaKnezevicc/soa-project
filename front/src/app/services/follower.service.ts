@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
 interface FollowingResponse {
@@ -13,6 +13,15 @@ interface RecommendationResponseItem {
 
 interface RecommendationsResponse {
   items: RecommendationResponseItem[];
+}
+
+interface SearchUsersResponseItem {
+  username: string;
+  role: string;
+}
+
+interface SearchUsersResponse {
+  items: SearchUsersResponseItem[];
 }
 
 @Injectable({
@@ -38,6 +47,17 @@ export class FollowerService {
 
   getRecommendations(): Observable<RecommendationResponseItem[]> {
     return this.http.get<RecommendationsResponse>(`${this.baseUrl}/recommendations`).pipe(
+      map((response) => response.items ?? [])
+    );
+  }
+
+  searchUsers(role: string, query: string, limit: number): Observable<SearchUsersResponseItem[]> {
+    const params = new HttpParams()
+      .set('role', role)
+      .set('q', query)
+      .set('limit', limit);
+
+    return this.http.get<SearchUsersResponse>('/api/stakeholders/users/search', { params }).pipe(
       map((response) => response.items ?? [])
     );
   }

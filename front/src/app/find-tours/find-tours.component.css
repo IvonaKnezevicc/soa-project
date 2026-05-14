@@ -1,7 +1,7 @@
 .find-tours-page {
   display: grid;
   gap: 1.5rem;
-  max-width: 1240px;
+  max-width: 1160px;
   margin: 0 auto;
 }
 
@@ -47,12 +47,16 @@
 .tour-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.2rem;
+  gap: 1rem;
 }
 
 .tour-card {
   display: grid;
   gap: 1rem;
+  width: 100%;
+  max-width: 320px;
+  justify-self: center;
+  min-width: 0;
   overflow: hidden;
   border-radius: 24px;
   background: #ffffff;
@@ -72,8 +76,9 @@
 }
 
 .tour-image-wrap {
-  aspect-ratio: 16 / 9;
+  height: 190px;
   background: linear-gradient(135deg, #f9d8e5, #f8fafc);
+  overflow: hidden;
 }
 
 .tour-image-wrap img,
@@ -97,7 +102,7 @@
 .tour-content {
   display: grid;
   gap: 0.85rem;
-  padding: 0 1.1rem 1.15rem;
+  padding: 0 1rem 1rem;
 }
 
 .tour-topline,
@@ -106,6 +111,15 @@
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.tour-topline {
+  justify-content: flex-end;
+}
+
+.tour-heading {
+  display: grid;
+  gap: 0.4rem;
 }
 
 .difficulty-pill,
@@ -118,9 +132,12 @@
 }
 
 .difficulty-pill {
+  padding: 0.3rem 0.62rem;
   background: #eff6ff;
   color: #8b1e3f;
   text-transform: capitalize;
+  font-size: 0.88rem;
+  width: fit-content;
 }
 
 .price-pill {
@@ -131,7 +148,7 @@
 .tour-content h2 {
   margin: 0;
   color: #0f172a;
-  font-size: 1.2rem;
+  font-size: 1.28rem;
 }
 
 .tour-description {

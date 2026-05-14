@@ -1,7 +1,7 @@
 <section class="tourist-my-tours-page">
   <div class="page-header">
     <div>
-      <h1>My Tours</h1>
+      <h1>My tours</h1>
       <p>View all tours you already purchased.</p>
     </div>
     <span class="total-pill">Purchased: {{ tours.length }}</span>
@@ -11,7 +11,7 @@
   <p class="page-message error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
   <div class="tour-grid" *ngIf="!isLoading && !errorMessage && tours.length; else emptyState">
-    <article class="tour-card clickable" *ngFor="let tour of tours" [routerLink]="['/tours', tour.id]">
+    <article class="tour-card clickable" *ngFor="let tour of tours" [routerLink]="['/tourist/my-tours', tour.id]">
       <div class="tour-image-wrap">
         <img *ngIf="getFirstPointImage(tour); else imageFallback" [src]="getFirstPointImage(tour)" [alt]="tour.name" />
         <ng-template #imageFallback>

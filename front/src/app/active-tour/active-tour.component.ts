@@ -18,6 +18,7 @@ export class ActiveTourComponent implements OnInit, OnDestroy {
   tour: Tour | null = null;
   execution: TourExecution | null = null;
   position: TouristPosition | null = null;
+  detailContext = '';
   isLoading = false;
   isChecking = false;
   isFinishing = false;
@@ -40,6 +41,7 @@ export class ActiveTourComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.tourId = this.route.snapshot.paramMap.get('id') ?? '';
+    this.detailContext = this.route.snapshot.data['context'] ?? '';
     this.loadActiveTour();
   }
 
@@ -145,7 +147,7 @@ export class ActiveTourComponent implements OnInit, OnDestroy {
   }
 
   backToDetails(): void {
-    this.router.navigate(['/tours', this.tourId]);
+    this.router.navigate(this.detailContext === 'my-tours' ? ['/tourist/my-tours', this.tourId] : ['/tours', this.tourId]);
   }
 
   private loadActiveTour(): void {

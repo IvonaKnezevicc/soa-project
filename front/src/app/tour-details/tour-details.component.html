@@ -4,6 +4,13 @@
   <p class="page-message error" *ngIf="actionMessage">{{ actionMessage }}</p>
 
   <ng-container *ngIf="tour && !isLoading && !errorMessage">
+    <button *ngIf="isFindToursDetail" type="button" class="back-arrow-button" (click)="goBackToFindTours()">
+      ← Back to Find tours
+    </button>
+    <button *ngIf="isMyToursDetail" type="button" class="back-arrow-button" (click)="goBackToMyTours()">
+      ← Back to My tours
+    </button>
+
     <div class="page-header">
       <div>
         <h1>{{ tour.name }}</h1>
@@ -34,11 +41,12 @@
 
     <article class="tour-summary">
       <div class="summary-topline">
-        <span class="difficulty-pill">{{ tour.difficulty }}</span>
+        <div class="summary-heading">
+          <h2>{{ tour.name }}</h2>
+          <span class="difficulty-pill">{{ tour.difficulty }}</span>
+        </div>
         <span class="price-pill">{{ tour.price | number:'1.2-2' }} $</span>
       </div>
-
-      <h2>{{ tour.name }}</h2>
       <p class="tour-description">{{ tour.description }}</p>
 
       <div class="tour-meta">
@@ -58,6 +66,68 @@
     </article>
 
     <section class="reviews-section">
+      <div class="review-form" *ngIf="isFindToursDetail">
+        <h3>Leave a review</h3>
+
+        <div class="review-grid">
+          <label>
+            <span>Rating</span>
+            <select [value]="reviewForm.rating" (change)="updateReviewRating($any($event.target).value)">
+              <option [value]="1">1</option>
+              <option [value]="2">2</option>
+              <option [value]="3">3</option>
+              <option [value]="4">4</option>
+              <option [value]="5">5</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Visited date</span>
+            <input
+              type="date"
+              [value]="reviewForm.visitedAt"
+              (input)="updateReviewVisitedAt($any($event.target).value)"
+            />
+          </label>
+        </div>
+
+        <label>
+          <span>Comment</span>
+          <textarea
+            rows="3"
+            [value]="reviewForm.comment"
+            (input)="updateReviewComment($any($event.target).value)"
+            placeholder="Share your experience"
+          ></textarea>
+        </label>
+
+        <label>
+          <span>Images</span>
+          <input #reviewImagesInput type="file" accept="image/*" multiple (change)="onReviewImagesSelected($event)" />
+        </label>
+
+        <div class="selected-image-grid" *ngIf="reviewForm.images.length">
+          <div class="selected-image-card" *ngFor="let image of reviewForm.images; let index = index">
+            <img [src]="image" alt="Selected review image" class="selected-image-preview" />
+            <button
+              type="button"
+              class="remove-image-button"
+              (click)="removeSelectedReviewImage(index, reviewImagesInput)"
+              aria-label="Remove selected review image">
+              ×
+            </button>
+            <p class="selected-image-name">{{ reviewForm.imageNames[index] }}</p>
+          </div>
+        </div>
+
+        <p class="review-message success" *ngIf="reviewSuccessMessage">{{ reviewSuccessMessage }}</p>
+        <p class="review-message error" *ngIf="reviewErrorMessage">{{ reviewErrorMessage }}</p>
+
+        <button type="button" [disabled]="reviewSubmitting" (click)="submitReview()">
+          {{ reviewSubmitting ? 'Saving...' : 'Submit review' }}
+        </button>
+      </div>
+
       <div class="reviews-header">
         <h3>Reviews</h3>
         <span>{{ reviews.length }}</span>
@@ -76,10 +146,50 @@
         <p class="visited-date">Visited: {{ review.visitedAt | date:'mediumDate' }}</p>
         <p class="review-comment">{{ review.comment }}</p>
 
-        <div class="review-images" *ngIf="review.images.length">
-          <img *ngFor="let image of review.images" [src]="image" alt="Review image" />
-        </div>
+        <button
+          type="button"
+          class="review-gallery-trigger"
+          *ngIf="review.images.length"
+          (click)="openReviewGallery(review.images)"
+          aria-label="Open review photos">
+          <span class="photo-frame-icon" aria-hidden="true"></span>
+          <span>{{ review.images.length }}</span>
+        </button>
       </article>
     </section>
+
+    <div class="modal-backdrop" *ngIf="selectedReviewGalleryImages.length" (click)="closeReviewGallery()">
+      <div class="modal-card gallery-modal-card" (click)="$event.stopPropagation()">
+        <button type="button" class="close-button" (click)="closeReviewGallery()" aria-label="Close review gallery">×</button>
+
+        <div class="gallery-shell">
+          <button
+            *ngIf="selectedReviewGalleryImages.length > 1"
+            type="button"
+            class="gallery-nav-button left"
+            (click)="previousReviewGalleryImage()"
+            aria-label="Previous image">
+            ‹
+          </button>
+
+          <div class="gallery-image-wrap">
+            <img
+              [src]="selectedReviewGalleryImages[selectedReviewGalleryIndex]"
+              alt="Review gallery image"
+              class="gallery-image"
+            />
+          </div>
+
+          <button
+            *ngIf="selectedReviewGalleryImages.length > 1"
+            type="button"
+            class="gallery-nav-button right"
+            (click)="nextReviewGalleryImage()"
+            aria-label="Next image">
+            ›
+          </button>
+        </div>
+      </div>
+    </div>
   </ng-container>
 </section>

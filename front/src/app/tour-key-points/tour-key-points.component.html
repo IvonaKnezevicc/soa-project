@@ -2,7 +2,6 @@
   <div class="page-header" *ngIf="tour as currentTour">
     <div>
       <a class="back-link" routerLink="/my-tours">Back to My tours</a>
-      <h1>Key points</h1>
       <p class="tour-name">{{ currentTour.name }}</p>
       <p class="tour-name">Distance: {{ currentTour.distanceInKm | number:'1.0-3' }} km</p>
       <p class="page-message" *ngIf="!isDraftTour">
@@ -19,6 +18,29 @@
     <div class="map-panel">
       <div id="key-points-map" class="map-shell"></div>
       <p class="map-hint">{{ mapHintMessage }}</p>
+
+      <div class="points-list map-points-list">
+        <div class="points-header">
+          <h3>Existing key points</h3>
+          <span>{{ tour.keyPoints.length }}</span>
+        </div>
+
+        <div class="empty-state" *ngIf="!tour.keyPoints.length">
+          No key points yet. Click on the map and create the first one.
+        </div>
+
+        <article class="point-card" *ngFor="let keyPoint of tour.keyPoints">
+          <div class="point-card-top">
+            <strong>{{ keyPoint.order }}. {{ keyPoint.name }}</strong>
+            <span>{{ keyPoint.latitude }}, {{ keyPoint.longitude }}</span>
+          </div>
+          <p>{{ keyPoint.description }}</p>
+          <div class="point-actions" *ngIf="isDraftTour">
+            <button type="button" class="secondary-button" (click)="editKeyPoint(keyPoint)">Edit</button>
+            <button type="button" class="danger-button" (click)="deleteKeyPoint(keyPoint)">Delete</button>
+          </div>
+        </article>
+      </div>
     </div>
 
     <div class="editor-panel">
@@ -59,29 +81,6 @@
           </button>
         </div>
       </form>
-
-      <div class="points-list">
-        <div class="points-header">
-          <h3>Existing key points</h3>
-          <span>{{ tour.keyPoints.length }}</span>
-        </div>
-
-        <div class="empty-state" *ngIf="!tour.keyPoints.length">
-          No key points yet. Click on the map and create the first one.
-        </div>
-
-        <article class="point-card" *ngFor="let keyPoint of tour.keyPoints">
-          <div class="point-card-top">
-            <strong>{{ keyPoint.order }}. {{ keyPoint.name }}</strong>
-            <span>{{ keyPoint.latitude }}, {{ keyPoint.longitude }}</span>
-          </div>
-          <p>{{ keyPoint.description }}</p>
-          <div class="point-actions" *ngIf="isDraftTour">
-            <button type="button" class="secondary-button" (click)="editKeyPoint(keyPoint)">Edit</button>
-            <button type="button" class="danger-button" (click)="deleteKeyPoint(keyPoint)">Delete</button>
-          </div>
-        </article>
-      </div>
 
       <div class="points-list">
         <div class="points-header">

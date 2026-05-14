@@ -17,6 +17,19 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
   tour: Tour | null = null;
   activeExecution: TourExecution | null = null;
   reviews: TourReview[] = [];
+  detailContext = '';
+  reviewForm: ReviewFormState = {
+    rating: 5,
+    comment: '',
+    visitedAt: '',
+    images: [],
+    imageNames: []
+  };
+  reviewSubmitting = false;
+  reviewSuccessMessage = '';
+  reviewErrorMessage = '';
+  selectedReviewGalleryImages: string[] = [];
+  selectedReviewGalleryIndex = 0;
   isLoading = false;
   isStarting = false;
   errorMessage = '';
@@ -36,6 +49,7 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.tourId = this.route.snapshot.paramMap.get('id') ?? '';
+    this.detailContext = this.route.snapshot.data['context'] ?? '';
     this.loadTour();
   }
 
@@ -57,6 +71,14 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
       default:
         return transportType;
     }
+  }
+
+  get isFindToursDetail(): boolean {
+    return this.detailContext === 'find-tours';
+  }
+
+  get isMyToursDetail(): boolean {
+    return this.detailContext === 'my-tours';
   }
 
   canStartTour(): boolean {
@@ -86,7 +108,7 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
     this.toursService.startTourExecution(tourId).subscribe({
       next: () => {
         this.isStarting = false;
-        this.router.navigate(['/tours', tourId, 'active']);
+        this.router.navigate(this.isMyToursDetail ? ['/tourist/my-tours', tourId, 'active'] : ['/tours', tourId, 'active']);
       },
       error: (error) => {
         this.actionMessage = error?.error?.message ?? 'Failed to start the tour.';
@@ -101,7 +123,147 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.router.navigate(['/tours', this.tour.id, 'active']);
+    this.router.navigate(this.isMyToursDetail ? ['/tourist/my-tours', this.tour.id, 'active'] : ['/tours', this.tour.id, 'active']);
+  }
+
+  goBackToFindTours(): void {
+    this.router.navigate(['/find-tours']);
+  }
+
+  goBackToMyTours(): void {
+    this.router.navigate(['/tourist/my-tours']);
+  }
+
+  updateReviewRating(value: string): void {
+    this.reviewForm.rating = Number(value);
+  }
+
+  updateReviewComment(value: string): void {
+    this.reviewForm.comment = value;
+  }
+
+  updateReviewVisitedAt(value: string): void {
+    this.reviewForm.visitedAt = value;
+  }
+
+  submitReview(): void {
+    this.reviewErrorMessage = '';
+    this.reviewSuccessMessage = '';
+
+    if (!this.reviewForm.rating || this.reviewForm.rating < 1 || this.reviewForm.rating > 5) {
+      this.reviewErrorMessage = 'Rating must be between 1 and 5.';
+      return;
+    }
+
+    if (!this.reviewForm.comment.trim()) {
+      this.reviewErrorMessage = 'Comment is required.';
+      return;
+    }
+
+    if (!this.reviewForm.visitedAt) {
+      this.reviewErrorMessage = 'Visited date is required.';
+      return;
+    }
+
+    this.reviewSubmitting = true;
+    this.toursService.createTourReview(this.tourId, {
+      rating: this.reviewForm.rating,
+      comment: this.reviewForm.comment.trim(),
+      visitedAt: this.reviewForm.visitedAt,
+      images: this.reviewForm.images
+    }).subscribe({
+      next: () => {
+        this.reviewForm = {
+          rating: 5,
+          comment: '',
+          visitedAt: '',
+          images: [],
+          imageNames: []
+        };
+        this.reviewSuccessMessage = 'Review saved.';
+        this.reviewSubmitting = false;
+        this.loadReviews();
+      },
+      error: (error) => {
+        this.reviewErrorMessage = error?.error?.message ?? 'Failed to save review.';
+        this.reviewSubmitting = false;
+      }
+    });
+  }
+
+  async onReviewImagesSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    if (files.length === 0) {
+      return;
+    }
+
+    const nextTotalCount = this.reviewForm.images.length + files.length;
+    if (nextTotalCount > 10) {
+      this.reviewErrorMessage = 'At most 10 images are allowed.';
+      return;
+    }
+
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+    if (imageFiles.length !== files.length) {
+      this.reviewErrorMessage = 'Please select image files only.';
+      return;
+    }
+
+    const oversized = imageFiles.find((file) => file.size > 1_500_000);
+    if (oversized) {
+      this.reviewErrorMessage = `Image "${oversized.name}" is too large (max 1.5MB).`;
+      return;
+    }
+
+    try {
+      const encoded = await Promise.all(imageFiles.map((file) => this.readFileAsDataURL(file)));
+      this.reviewForm.images = [...this.reviewForm.images, ...encoded];
+      this.reviewForm.imageNames = [...this.reviewForm.imageNames, ...imageFiles.map((file) => file.name)];
+      this.reviewErrorMessage = '';
+      input.value = '';
+    } catch {
+      this.reviewErrorMessage = 'Failed to read selected images.';
+    }
+  }
+
+  removeSelectedReviewImage(index: number, input?: HTMLInputElement): void {
+    this.reviewForm.images = this.reviewForm.images.filter((_, imageIndex) => imageIndex !== index);
+    this.reviewForm.imageNames = this.reviewForm.imageNames.filter((_, imageIndex) => imageIndex !== index);
+    if (input) {
+      input.value = '';
+    }
+  }
+
+  openReviewGallery(images: string[], startIndex = 0): void {
+    if (!images.length) {
+      return;
+    }
+
+    this.selectedReviewGalleryImages = [...images];
+    this.selectedReviewGalleryIndex = startIndex;
+  }
+
+  closeReviewGallery(): void {
+    this.selectedReviewGalleryImages = [];
+    this.selectedReviewGalleryIndex = 0;
+  }
+
+  previousReviewGalleryImage(): void {
+    if (this.selectedReviewGalleryImages.length <= 1) {
+      return;
+    }
+
+    const length = this.selectedReviewGalleryImages.length;
+    this.selectedReviewGalleryIndex = (this.selectedReviewGalleryIndex - 1 + length) % length;
+  }
+
+  nextReviewGalleryImage(): void {
+    if (this.selectedReviewGalleryImages.length <= 1) {
+      return;
+    }
+
+    this.selectedReviewGalleryIndex = (this.selectedReviewGalleryIndex + 1) % this.selectedReviewGalleryImages.length;
   }
 
   private loadTour(): void {
@@ -280,6 +442,22 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
     `;
   }
 
+  private readFileAsDataURL(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+          return;
+        }
+
+        reject(new Error('Invalid file reader result'));
+      };
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.readAsDataURL(file);
+    });
+  }
+
   private escapeHtml(value: string): string {
     return value
       .replace(/&/g, '&amp;')
@@ -288,4 +466,12 @@ export class TourDetailsComponent implements OnInit, OnDestroy {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
+}
+
+interface ReviewFormState {
+  rating: number;
+  comment: string;
+  visitedAt: string;
+  images: string[];
+  imageNames: string[];
 }

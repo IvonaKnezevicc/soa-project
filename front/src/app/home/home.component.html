@@ -16,10 +16,23 @@
 
   <div class="blog-grid" *ngIf="!isLoading">
     <article class="blog-card" *ngFor="let post of posts">
-      <h3>{{ post.title }}</h3>
-      <p class="meta">
-        By {{ post.authorUsername }} | {{ post.createdAt | date:'medium' }}
-      </p>
+      <button type="button" class="blog-card-hitbox" (click)="openPost(post)">
+        <h3>{{ post.title }}</h3>
+
+        <div class="cover-image-wrap" *ngIf="post.imageUrls.length > 0; else noImage">
+          <img [src]="post.imageUrls[0]" alt="Blog cover image" class="cover-image" />
+        </div>
+        <ng-template #noImage>
+          <div class="cover-image-wrap cover-image-empty">
+            <span>No image</span>
+          </div>
+        </ng-template>
+
+        <p class="meta">
+          By {{ post.authorUsername }} | {{ post.createdAt | date:'medium' }}
+        </p>
+      </button>
+
       <button
         *ngIf="post.authorUsername !== currentUsername && !isFollowing(post.authorUsername)"
         type="button"
@@ -29,55 +42,6 @@
       >
         Follow {{ post.authorUsername }}
       </button>
-      <div class="markdown-output" [innerHTML]="post.renderedDescription"></div>
-
-      <div class="images" *ngIf="post.imageUrls.length > 0">
-        <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Blog image" />
-      </div>
-
-      <div class="likes-row">
-        <p class="likes-count">{{ post.likeCount }} like(s)</p>
-        <button
-          type="button"
-          class="like-button"
-          [disabled]="likeSubmitting[post.id]"
-          (click)="toggleLike(post.id, post.likedByCurrentUser)"
-        >
-          {{ post.likedByCurrentUser ? 'Unlike' : 'Like' }}
-        </button>
-      </div>
-      <p class="error" *ngIf="likeErrorMessages[post.id]">{{ likeErrorMessages[post.id] }}</p>
-
-      <div class="comments-section">
-        <h4>Comments</h4>
-
-        <p class="empty-comments" *ngIf="post.comments.length === 0">No comments yet.</p>
-
-        <div class="comment-card" *ngFor="let comment of post.comments">
-          <p class="comment-meta">
-            {{ comment.authorUsername }} | {{ comment.createdAt | date:'medium' }}
-          </p>
-          <p class="comment-updated">Last updated: {{ comment.updatedAt | date:'medium' }}</p>
-          <p class="comment-text">{{ comment.text }}</p>
-        </div>
-
-        <div class="comment-form">
-          <label [for]="'comment-' + post.id">Add comment</label>
-          <textarea
-            [id]="'comment-' + post.id"
-            rows="3"
-            [value]="commentTexts[post.id] || ''"
-            (input)="updateCommentText(post.id, $any($event.target).value)"
-            placeholder="Write your comment"
-          ></textarea>
-
-          <p class="error" *ngIf="commentErrorMessages[post.id]">{{ commentErrorMessages[post.id] }}</p>
-
-          <button type="button" [disabled]="commentSubmitting[post.id]" (click)="submitComment(post.id)">
-            {{ commentSubmitting[post.id] ? 'Posting...' : 'Post comment' }}
-          </button>
-        </div>
-      </div>
     </article>
   </div>
 
@@ -91,12 +55,15 @@
           Title is required.
         </p>
 
-        <label for="descriptionMarkdown">Description</label>
+        <label for="descriptionMarkdown" class="label-with-info">
+          <span>Description</span>
+          <span class="info-badge" [attr.title]="markdownHint" tabindex="0">i</span>
+        </label>
         <textarea
           id="descriptionMarkdown"
           rows="8"
           formControlName="descriptionMarkdown"
-          placeholder="Use Markdown, for example: **bold**, ## heading, - list"
+          placeholder="Check info"
         ></textarea>
         <p
           class="error"
@@ -106,10 +73,20 @@
         </p>
 
         <label for="imagesInput">Images (optional)</label>
-        <input id="imagesInput" type="file" accept="image/*" multiple (change)="onImagesSelected($event)" />
-        <p class="selected-images" *ngIf="selectedImageNames.length > 0">
-          {{ selectedImageNames.length }} image(s) selected
-        </p>
+        <input #imagesInput id="imagesInput" type="file" accept="image/*" multiple (change)="onImagesSelected($event)" />
+        <div class="selected-image-grid" *ngIf="selectedImages.length > 0">
+          <div class="selected-image-card" *ngFor="let image of selectedImages; let index = index">
+            <img [src]="image" alt="Selected blog image" class="selected-image-preview" />
+            <button
+              type="button"
+              class="remove-image-button"
+              (click)="removeSelectedImage(index, imagesInput)"
+              aria-label="Remove selected image">
+              ×
+            </button>
+            <p class="selected-image-name">{{ selectedImageNames[index] }}</p>
+          </div>
+        </div>
 
         <p class="error" *ngIf="createErrorMessage">{{ createErrorMessage }}</p>
 
@@ -118,6 +95,92 @@
           <button type="submit" [disabled]="isSubmitting">{{ isSubmitting ? 'Creating...' : 'Create blog' }}</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="selectedPost" (click)="closePost()">
+    <div class="modal-card post-modal-card" (click)="$event.stopPropagation()">
+      <div class="post-modal-header">
+        <div>
+          <h3>{{ selectedPost.title }}</h3>
+          <p class="meta">
+            By {{ selectedPost.authorUsername }} | {{ selectedPost.createdAt | date:'medium' }}
+          </p>
+        </div>
+        <button type="button" class="close-button" (click)="closePost()" aria-label="Close blog details">×</button>
+      </div>
+
+      <div class="carousel-shell" *ngIf="selectedPost.imageUrls.length > 0">
+        <button
+          *ngIf="selectedPost.imageUrls.length > 1"
+          type="button"
+          class="carousel-button left"
+          (click)="previousPostImage()"
+          aria-label="Previous image">
+          ‹
+        </button>
+        <div class="carousel-image-wrap">
+          <img
+            [src]="selectedPost.imageUrls[selectedPostImageIndex]"
+            alt="Selected blog image"
+            class="carousel-image"
+          />
+        </div>
+        <button
+          *ngIf="selectedPost.imageUrls.length > 1"
+          type="button"
+          class="carousel-button right"
+          (click)="nextPostImage()"
+          aria-label="Next image">
+          ›
+        </button>
+      </div>
+
+      <div class="likes-row modal-likes-row">
+        <p class="likes-count">{{ selectedPost.likeCount }} <span class="heart-icon">♥</span></p>
+        <button
+          type="button"
+          class="icon-like-button"
+          [disabled]="likeSubmitting[selectedPost.id]"
+          (click)="toggleLike(selectedPost.id, selectedPost.likedByCurrentUser)"
+          [attr.aria-label]="selectedPost.likedByCurrentUser ? 'Unlike blog post' : 'Like blog post'">
+          <span class="thumb-icon">👍</span>
+        </button>
+      </div>
+      <p class="error" *ngIf="likeErrorMessages[selectedPost.id]">{{ likeErrorMessages[selectedPost.id] }}</p>
+
+      <div class="markdown-output detail-markdown" [innerHTML]="selectedPost.renderedDescription"></div>
+
+      <div class="comments-section modal-comments">
+        <div class="comment-form">
+          <label [for]="'comment-' + selectedPost.id">Add comment</label>
+          <textarea
+            [id]="'comment-' + selectedPost.id"
+            rows="3"
+            [value]="commentTexts[selectedPost.id] || ''"
+            (input)="updateCommentText(selectedPost.id, $any($event.target).value)"
+            placeholder="Write your comment"
+          ></textarea>
+
+          <p class="error" *ngIf="commentErrorMessages[selectedPost.id]">{{ commentErrorMessages[selectedPost.id] }}</p>
+
+          <button type="button" [disabled]="commentSubmitting[selectedPost.id]" (click)="submitComment(selectedPost.id)">
+            {{ commentSubmitting[selectedPost.id] ? 'Posting...' : 'Post comment' }}
+          </button>
+        </div>
+
+        <div class="comments-list">
+          <p class="empty-comments" *ngIf="selectedPost.comments.length === 0">No comments yet.</p>
+
+          <div class="comment-card" *ngFor="let comment of selectedPost.comments">
+            <p class="comment-meta">
+              {{ comment.authorUsername }} | {{ comment.createdAt | date:'medium' }}
+            </p>
+            <p class="comment-updated">Last updated: {{ comment.updatedAt | date:'medium' }}</p>
+            <p class="comment-text">{{ comment.text }}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

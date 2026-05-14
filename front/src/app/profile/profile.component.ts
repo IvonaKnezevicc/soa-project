@@ -126,6 +126,14 @@ export class ProfileComponent implements OnInit {
     this.isEditOpen = false;
   }
 
+  removeProfileImage(input?: HTMLInputElement): void {
+    this.form.controls.profileImage.setValue('');
+    this.errorMessage = '';
+    if (input) {
+      input.value = '';
+    }
+  }
+
   onImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];

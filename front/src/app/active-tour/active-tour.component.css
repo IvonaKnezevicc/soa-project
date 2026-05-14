@@ -5,6 +5,17 @@
   margin: 0 auto;
 }
 
+.back-arrow-button {
+  justify-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: #8b1e3f;
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 0;
+  cursor: pointer;
+}
+
 .page-header,
 .action-row,
 .section-header,

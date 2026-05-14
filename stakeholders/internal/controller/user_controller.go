@@ -160,6 +160,46 @@ func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
+func (c *UserController) SearchUsers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
+		return
+	}
+
+	identity, ok := auth.IdentityFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, dto.ErrorResponse{Message: "authenticated user not found in context"})
+		return
+	}
+
+	role := r.URL.Query().Get("role")
+	prefix := r.URL.Query().Get("q")
+	limit := 10
+
+	if limitQuery := r.URL.Query().Get("limit"); limitQuery != "" {
+		parsedLimit, err := strconv.Atoi(limitQuery)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: "limit must be a valid integer"})
+			return
+		}
+
+		limit = parsedLimit
+	}
+
+	response, err := c.userListService.SearchUsers(r.Context(), role, prefix, identity.Username, limit)
+	if err != nil {
+		switch {
+		case errors.Is(err, apperror.ErrValidation):
+			writeJSON(w, http.StatusBadRequest, dto.ErrorResponse{Message: err.Error()})
+		default:
+			writeJSON(w, http.StatusInternalServerError, dto.ErrorResponse{Message: "internal server error"})
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}
+
 func (c *UserController) BlockUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		writeJSON(w, http.StatusMethodNotAllowed, dto.ErrorResponse{Message: "method not allowed"})
